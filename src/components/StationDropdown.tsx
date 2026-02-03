@@ -91,7 +91,10 @@ export function StationDropdown({
                     {filteredStations.map((s) => (
                         <div
                             key={s.id}
-                            onClick={() => handleSelect(s.id)}
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSelect(s.id);
+                            }}
                             className={`station-dropdown-item ${s.id === selectedId ? 'selected' : ''}`}
                         >
                             <div className='station-dropdown-item-text'>
