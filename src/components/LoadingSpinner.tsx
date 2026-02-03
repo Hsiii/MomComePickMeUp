@@ -8,7 +8,9 @@ export function LoadingSpinner({ message }: LoadingSpinnerProps) {
     return (
         <div className='glass-panel loading-spinner-container'>
             <div className='spinner loading-spinner'></div>
-            {message && <div className='loading-spinner-message'>{message}</div>}
+            {message && (
+                <div className='loading-spinner-message'>{message}</div>
+            )}
         </div>
     );
 }

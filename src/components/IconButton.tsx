@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+
 import './IconButton.css';
 
 interface IconButtonProps {
@@ -7,7 +8,11 @@ interface IconButtonProps {
     className?: string;
 }
 
-export function IconButton({ onClick, children, className = '' }: IconButtonProps) {
+export function IconButton({
+    onClick,
+    children,
+    className = '',
+}: IconButtonProps) {
     return (
         <button onClick={onClick} className={`icon-button ${className}`}>
             {children}

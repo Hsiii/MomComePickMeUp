@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+
 import type { Station } from '../types';
 
 interface StationDropdownProps {
@@ -37,7 +38,8 @@ export function StationDropdown({
         };
 
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () =>
+            document.removeEventListener('mousedown', handleClickOutside);
     }, [setIsOpen]);
 
     const filteredStations = searchValue

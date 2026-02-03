@@ -4,9 +4,13 @@ interface BadgeProps {
     className?: string;
 }
 
-export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {
+export function Badge({
+    children,
+    variant = 'default',
+    className = '',
+}: BadgeProps) {
     const variantClass = variant !== 'default' ? `badge-${variant}` : '';
-    
+
     return (
         <span className={`badge ${variantClass} ${className}`.trim()}>
             {children}

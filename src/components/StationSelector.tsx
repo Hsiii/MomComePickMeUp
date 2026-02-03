@@ -104,7 +104,9 @@ export function StationSelector({
                 onSelect={handleOriginSelect}
                 placeholder='From...'
                 selectedStation={originStation}
-                onCacheSelection={(id) => localStorage.setItem(CACHED_ORIGIN_KEY, id)}
+                onCacheSelection={(id) =>
+                    localStorage.setItem(CACHED_ORIGIN_KEY, id)
+                }
             />
 
             {/* Arrow */}

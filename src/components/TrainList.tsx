@@ -141,7 +141,7 @@ export function TrainList({
     const shouldShowLoading = loading && !hasRecentData;
 
     if (shouldShowLoading) {
-        return <LoadingSpinner message="Loading schedule..." />;
+        return <LoadingSpinner message='Loading schedule...' />;
     }
 
     if (error)
@@ -193,7 +193,10 @@ export function TrainList({
                                     {train.departureTime}
                                 </span>
                                 {isNext && (
-                                    <Badge variant="success" className="train-card-next-badge">
+                                    <Badge
+                                        variant='success'
+                                        className='train-card-next-badge'
+                                    >
                                         Next
                                     </Badge>
                                 )}
@@ -204,7 +207,13 @@ export function TrainList({
                             </div>
                         </div>
                         <div className='train-card-right'>
-                            <Badge variant={train.status === 'delayed' ? 'danger' : 'success'}>
+                            <Badge
+                                variant={
+                                    train.status === 'delayed'
+                                        ? 'danger'
+                                        : 'success'
+                                }
+                            >
                                 {train.delay && train.delay > 0
                                     ? `+${train.delay} min`
                                     : 'On Time'}
