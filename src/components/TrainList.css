@@ -54,6 +54,16 @@
     font-weight: bold;
 }
 
+.train-card-arrow {
+    font-size: 1rem;
+    color: var(--color-text-dim);
+}
+
+.train-card-arrival-time {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
 .train-card-next-badge {
     background: var(--color-primary);
     color: #000;

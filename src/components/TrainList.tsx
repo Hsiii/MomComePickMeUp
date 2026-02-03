@@ -13,6 +13,18 @@ import { LoadingSpinner } from './LoadingSpinner';
 
 import './TrainList.css';
 
+/**
+ * Parse train type to extract simple term
+ * Examples:
+ * - "自強(商務專開列車)" → "自強"
+ * - "區間" → "區間"
+ * - "莒光(跨線列車)" → "莒光"
+ */
+function parseTrainType(trainType: string): string {
+    // Remove content in parentheses and any suffix like "號"
+    return trainType.split('(')[0].replace(/號$/, '');
+}
+
 interface TrainListProps {
     originId: string;
     destId: string;
@@ -192,6 +204,10 @@ export function TrainList({
                                 <span className='train-card-departure-time'>
                                     {train.departureTime}
                                 </span>
+                                <span className='train-card-arrow'>➔</span>
+                                <span className='train-card-arrival-time'>
+                                    {train.arrivalTime}
+                                </span>
                                 {isNext && (
                                     <Badge
                                         variant='success'
@@ -202,7 +218,7 @@ export function TrainList({
                                 )}
                             </div>
                             <div className='train-card-details'>
-                                ➔ {train.arrivalTime} • {train.trainType}{' '}
+                                {parseTrainType(train.trainType)}{' '}
                                 {train.trainNo}
                             </div>
                         </div>
