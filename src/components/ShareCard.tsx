@@ -23,7 +23,7 @@ export function ShareCard({ train, destName }: ShareCardProps) {
 
     // Simple message: "<time>到<station>"
     const defaultMessage = train ? `${adjustedTime}到${destName}` : '';
-    
+
     // Use train number as key to reset message when train changes
     const trainKey = train?.trainNo || '';
     const [message, setMessage] = useState(defaultMessage);
@@ -69,7 +69,10 @@ export function ShareCard({ train, destName }: ShareCardProps) {
     if (!train) return null;
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div
+            className="message-bar-fixed"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+        >
             <input
                 type="text"
                 style={{

@@ -20,7 +20,14 @@
     --radius-md: 12px;
     --radius-sm: 8px;
 
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+html {
+    overflow-x: hidden;
+    height: 100vh;
+    height: 100svh;
 }
 
 body {
@@ -29,7 +36,6 @@ body {
     background-color: var(--color-bg);
     color: var(--color-text);
     -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
     display: flex;
     justify-content: center;
 }
@@ -38,6 +44,9 @@ body {
     width: 100%;
     max-width: 480px; /* Mobile-first constraint */
     padding: 20px;
+    padding-bottom: calc(
+        100px + env(safe-area-inset-bottom)
+    ); /* Space for fixed message bar + iOS safe area */
     box-sizing: border-box;
 }
 
@@ -161,4 +170,18 @@ select {
 .badge-danger {
     background: rgba(239, 68, 68, 0.2);
     color: var(--color-danger);
+}
+
+.message-bar-fixed {
+    position: fixed;
+    bottom: env(safe-area-inset-bottom);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    padding: 12px 20px;
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-card-border);
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 100;
 }
