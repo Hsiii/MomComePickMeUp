@@ -31,19 +31,11 @@ export function StationSelector({
 
     // Auto-select nearest station on load
     useEffect(() => {
-        if (stations.length === 0 || originId || hasAutoSelected.current)
-            return;
+        if (stations.length === 0 || hasAutoSelected.current) return;
 
         hasAutoSelected.current = true;
 
-        // Try to use cached origin first
-        const cachedOriginId = localStorage.getItem(CACHED_ORIGIN_KEY);
-        if (cachedOriginId && stations.find((s) => s.id === cachedOriginId)) {
-            setOriginId(cachedOriginId);
-            return;
-        }
-
-        // Try geolocation
+        // Try geolocation first for nearest station
         if (!navigator.geolocation) {
             // Fallback: select first station
             if (stations[0]) setOriginId(stations[0].id);
@@ -75,13 +67,19 @@ export function StationSelector({
                 }
             },
             () => {
-                // Fallback on error: select first station
-                if (stations[0]) {
+                // Fallback on error: try cached origin first
+                const cachedOriginId = localStorage.getItem(CACHED_ORIGIN_KEY);
+                if (
+                    cachedOriginId &&
+                    stations.find((s) => s.id === cachedOriginId)
+                ) {
+                    setOriginId(cachedOriginId);
+                } else if (stations[0]) {
                     setOriginId(stations[0].id);
                 }
             }
         );
-    }, [stations, originId, setOriginId]);
+    }, [stations, setOriginId]);
 
     const originStation = stations.find((s) => s.id === originId);
     const destStation = stations.find((s) => s.id === destId);
