@@ -27,11 +27,6 @@ function App() {
 
     return (
         <div className="app-container">
-            <header className="app-header">
-                <h1>Mom, Come Pick Me Up!</h1>
-                <p>Public Transport Notification Utility</p>
-            </header>
-
             <main style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 <StationSelector
                     stations={stations}

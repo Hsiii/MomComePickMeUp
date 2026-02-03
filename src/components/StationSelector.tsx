@@ -116,9 +116,7 @@ export function StationSelector({
 
     return (
         <div
-            className="glass-panel"
             style={{
-                padding: '1rem',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1rem',
@@ -141,6 +139,8 @@ export function StationSelector({
                     }}
                     style={{
                         width: '100%',
+                        height: '4rem',
+                        textAlign: 'center',
                         padding: '0.6rem',
                         fontSize: '0.9rem',
                         background: 'rgba(255, 255, 255, 0.05)',
@@ -158,6 +158,7 @@ export function StationSelector({
                             right: 0,
                             maxHeight: '300px',
                             overflowY: 'auto',
+                            textAlign: 'center',
                             background: 'var(--color-card-bg)',
                             border: '1px solid rgba(255, 255, 255, 0.1)',
                             borderRadius: '6px',
@@ -195,9 +196,6 @@ export function StationSelector({
                                 }}
                             >
                                 <div style={{ fontSize: '0.9rem' }}>{s.name}</div>
-                                <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>
-                                    {s.nameEn}
-                                </div>
                             </div>
                         ))}
                     </div>
@@ -226,6 +224,8 @@ export function StationSelector({
                     }}
                     style={{
                         width: '100%',
+                        height: '4rem',
+                        textAlign: 'center',
                         padding: '0.6rem',
                         fontSize: '0.9rem',
                         background: 'rgba(255, 255, 255, 0.05)',
@@ -244,6 +244,7 @@ export function StationSelector({
                             maxHeight: '300px',
                             overflowY: 'auto',
                             background: 'var(--color-card-bg)',
+                            textAlign: 'center',
                             border: '1px solid rgba(255, 255, 255, 0.1)',
                             borderRadius: '6px',
                             zIndex: 1000,
@@ -277,9 +278,6 @@ export function StationSelector({
                                 }}
                             >
                                 <div style={{ fontSize: '0.9rem' }}>{s.name}</div>
-                                <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>
-                                    {s.nameEn}
-                                </div>
                             </div>
                         ))}
                     </div>
