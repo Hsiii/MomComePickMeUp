@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Share2, Copy } from 'lucide-react';
 import type { TrainInfo } from '../types';
+import { IconButton } from './IconButton';
 import './ShareCard.css';
 
 interface ShareCardProps {
@@ -78,12 +79,12 @@ export function ShareCard({ train, destName }: ShareCardProps) {
                 onChange={(e) => setMessage(e.target.value)}
             />
 
-            <button onClick={handleShare} className="share-card-button">
+            <IconButton onClick={handleShare} className="share-card-button">
                 <Share2 size={20} />
-            </button>
-            <button onClick={handleCopy} className="share-card-button">
+            </IconButton>
+            <IconButton onClick={handleCopy} className="share-card-button">
                 <Copy size={20} />
-            </button>
+            </IconButton>
         </div>
     );
 }

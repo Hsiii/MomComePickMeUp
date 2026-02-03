@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 import type { Station } from '../types';
+import { StationDropdown } from './StationDropdown';
 
 import './StationSelector.css';
 
@@ -26,8 +27,6 @@ export function StationSelector({
     const [destSearch, setDestSearch] = useState('');
     const [originDropdownOpen, setOriginDropdownOpen] = useState(false);
     const [destDropdownOpen, setDestDropdownOpen] = useState(false);
-    const originRef = useRef<HTMLDivElement>(null);
-    const destRef = useRef<HTMLDivElement>(null);
     const hasAutoSelected = useRef(false);
 
     // Auto-select nearest station on load
@@ -84,89 +83,29 @@ export function StationSelector({
         );
     }, [stations, originId, setOriginId]);
 
-    // Close dropdowns when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                originRef.current &&
-                !originRef.current.contains(event.target as Node)
-            ) {
-                setOriginDropdownOpen(false);
-            }
-            if (
-                destRef.current &&
-                !destRef.current.contains(event.target as Node)
-            ) {
-                setDestDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () =>
-            document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const filteredOrigin = originSearch
-        ? stations.filter(
-              (s) =>
-                  s.name.includes(originSearch) ||
-                  s.nameEn.toLowerCase().includes(originSearch.toLowerCase())
-          )
-        : stations;
-
-    const filteredDest = destSearch
-        ? stations.filter(
-              (s) =>
-                  s.name.includes(destSearch) ||
-                  s.nameEn.toLowerCase().includes(destSearch.toLowerCase())
-          )
-        : stations;
-
     const originStation = stations.find((s) => s.id === originId);
     const destStation = stations.find((s) => s.id === destId);
+
+    const handleOriginSelect = (id: string) => {
+        setOriginId(id);
+        localStorage.setItem(CACHED_ORIGIN_KEY, id);
+    };
 
     return (
         <div className='station-selector-container'>
             {/* Origin Station */}
-            <div ref={originRef} className='station-input-wrapper'>
-                <input
-                    type='text'
-                    className='search-input station-input'
-                    placeholder='From...'
-                    value={originSearch || originStation?.name || ''}
-                    onChange={(e) => {
-                        setOriginSearch(e.target.value);
-                        setOriginDropdownOpen(true);
-                    }}
-                    onFocus={() => {
-                        setOriginSearch('');
-                        setOriginDropdownOpen(true);
-                    }}
-                />
-                {originDropdownOpen && (
-                    <div className='station-dropdown'>
-                        {filteredOrigin.map((s) => (
-                            <div
-                                key={s.id}
-                                onClick={() => {
-                                    setOriginId(s.id);
-                                    localStorage.setItem(
-                                        CACHED_ORIGIN_KEY,
-                                        s.id
-                                    );
-                                    setOriginSearch('');
-                                    setOriginDropdownOpen(false);
-                                }}
-                                className={`station-dropdown-item ${s.id === originId ? 'selected' : ''}`}
-                            >
-                                <div className='station-dropdown-item-text'>
-                                    {s.name}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+            <StationDropdown
+                stations={stations}
+                searchValue={originSearch}
+                setSearchValue={setOriginSearch}
+                isOpen={originDropdownOpen}
+                setIsOpen={setOriginDropdownOpen}
+                selectedId={originId}
+                onSelect={handleOriginSelect}
+                placeholder='From...'
+                selectedStation={originStation}
+                onCacheSelection={(id) => localStorage.setItem(CACHED_ORIGIN_KEY, id)}
+            />
 
             {/* Arrow */}
             <div className='station-arrow'>
@@ -174,41 +113,17 @@ export function StationSelector({
             </div>
 
             {/* Destination Station */}
-            <div ref={destRef} className='station-input-wrapper'>
-                <input
-                    type='text'
-                    className='search-input station-input'
-                    placeholder='To...'
-                    value={destSearch || destStation?.name || ''}
-                    onChange={(e) => {
-                        setDestSearch(e.target.value);
-                        setDestDropdownOpen(true);
-                    }}
-                    onFocus={() => {
-                        setDestSearch('');
-                        setDestDropdownOpen(true);
-                    }}
-                />
-                {destDropdownOpen && (
-                    <div className='station-dropdown'>
-                        {filteredDest.map((s) => (
-                            <div
-                                key={s.id}
-                                onClick={() => {
-                                    setDestId(s.id);
-                                    setDestSearch('');
-                                    setDestDropdownOpen(false);
-                                }}
-                                className={`station-dropdown-item ${s.id === destId ? 'selected' : ''}`}
-                            >
-                                <div className='station-dropdown-item-text'>
-                                    {s.name}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+            <StationDropdown
+                stations={stations}
+                searchValue={destSearch}
+                setSearchValue={setDestSearch}
+                isOpen={destDropdownOpen}
+                setIsOpen={setDestDropdownOpen}
+                selectedId={destId}
+                onSelect={setDestId}
+                placeholder='To...'
+                selectedStation={destStation}
+            />
         </div>
     );
 }

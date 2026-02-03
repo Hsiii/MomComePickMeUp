@@ -8,6 +8,8 @@ import {
 
 import { api } from '../api/client';
 import type { TrainInfo } from '../types';
+import { Badge } from './Badge';
+import { LoadingSpinner } from './LoadingSpinner';
 
 import './TrainList.css';
 
@@ -138,13 +140,9 @@ export function TrainList({
         date.getTime() - lastFetchTime < 120000;
     const shouldShowLoading = loading && !hasRecentData;
 
-    if (shouldShowLoading)
-        return (
-            <div className='glass-panel train-list-loading'>
-                <div className='spinner train-list-loading-spinner'></div>
-                Loading schedule...
-            </div>
-        );
+    if (shouldShowLoading) {
+        return <LoadingSpinner message="Loading schedule..." />;
+    }
 
     if (error)
         return (
@@ -195,9 +193,9 @@ export function TrainList({
                                     {train.departureTime}
                                 </span>
                                 {isNext && (
-                                    <span className='badge badge-success train-card-next-badge'>
+                                    <Badge variant="success" className="train-card-next-badge">
                                         Next
-                                    </span>
+                                    </Badge>
                                 )}
                             </div>
                             <div className='train-card-details'>
@@ -206,13 +204,11 @@ export function TrainList({
                             </div>
                         </div>
                         <div className='train-card-right'>
-                            <div
-                                className={`badge ${train.status === 'delayed' ? 'badge-danger' : 'badge-success'}`}
-                            >
+                            <Badge variant={train.status === 'delayed' ? 'danger' : 'success'}>
                                 {train.delay && train.delay > 0
                                     ? `+${train.delay} min`
                                     : 'On Time'}
-                            </div>
+                            </Badge>
                         </div>
                     </div>
                 );
