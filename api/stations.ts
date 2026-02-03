@@ -27,7 +27,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             // Filter by fields to reduce size: StationID, StationName
             data = await fetchTDX('v3/Rail/TRA/Station', {
                 searchParams: {
-                    $select: 'StationID,StationName',
+                    $select: 'StationID,StationName,StationPosition',
+                    $top: '999', // Get all stations
                 },
                 tier: 'basic',
             });
@@ -37,10 +38,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // The response is a direct array, not wrapped in a Stations property
         // Transform to our Station type
         const stations = (Array.isArray(data) ? data : data.Stations || []).map(
-            (s: TDXStation) => ({
+            (
+                s: TDXStation & { StationPosition?: { PositionLat?: number; PositionLon?: number } }
+            ) => ({
                 id: s.StationID,
                 name: s.StationName.Zh_tw,
                 nameEn: s.StationName.En,
+                lat: s.StationPosition?.PositionLat,
+                lon: s.StationPosition?.PositionLon,
             })
         );
 

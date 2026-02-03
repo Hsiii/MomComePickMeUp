@@ -1,3 +1,4 @@
+import { Share2, Copy } from 'lucide-react';
 import type { TrainInfo } from '../types';
 
 interface ShareCardProps {
@@ -113,22 +114,43 @@ export function ShareCard({
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button
                         onClick={handleShare}
-                        className="btn-primary"
-                        style={{ flex: 1, fontSize: '1rem' }}
+                        style={{
+                            flex: 1,
+                            padding: '0.6rem',
+                            fontSize: '0.875rem',
+                            color: 'var(--color-text)',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                        }}
                     >
-                        分享 📤
+                        <Share2 size={16} />
+                        分享
                     </button>
                     <button
                         onClick={handleCopy}
-                        className="btn-primary"
                         style={{
                             flex: 1,
-                            fontSize: '1rem',
-                            background: 'rgba(34, 197, 94, 0.2)',
-                            borderColor: '#22c55e',
+                            padding: '0.6rem',
+                            fontSize: '0.875rem',
+                            color: 'var(--color-text)',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
                         }}
                     >
-                        複製 📋
+                        <Copy size={16} />
+                        複製
                     </button>
                 </div>
                 <button

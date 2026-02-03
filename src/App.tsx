@@ -8,68 +8,67 @@ import type { TrainInfo, Station } from './types';
 import { api } from './api/client';
 
 function App() {
-  const { originId, setOriginId, destId, setDestId, template, setTemplate, resetTemplate } =
-    usePersistence();
+    const { originId, setOriginId, destId, setDestId, template, setTemplate, resetTemplate } =
+        usePersistence();
 
-  const [stations, setStations] = useState<Station[]>([]);
-  const [selectedTrain, setSelectedTrain] = useState<TrainInfo | null>(null);
+    const [stations, setStations] = useState<Station[]>([]);
+    const [selectedTrain, setSelectedTrain] = useState<TrainInfo | null>(null);
 
-  // Fetch stations at App level to provide names to ShareCard
-  useEffect(() => {
-    api.getStations().then(setStations).catch(console.error);
-  }, []);
+    // Fetch stations at App level to provide names to ShareCard
+    useEffect(() => {
+        api.getStations().then(setStations).catch(console.error);
+    }, []);
 
-  const originStation = stations.find((s) => s.id === originId);
-  const destStation = stations.find((s) => s.id === destId);
+    const originStation = stations.find((s) => s.id === originId);
+    const destStation = stations.find((s) => s.id === destId);
 
-  const originName = originStation?.name || originId;
-  const destName = destStation?.name || destId;
+    const originName = originStation?.name || originId;
+    const destName = destStation?.name || destId;
 
-  return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1>Mom, Come Pick Me Up! 🚙</h1>
-        <p>Public Transport Notification Utility</p>
-      </header>
+    return (
+        <div className="app-container">
+            <header className="app-header">
+                <h1>Mom, Come Pick Me Up!</h1>
+                <p>Public Transport Notification Utility</p>
+            </header>
 
-      <main style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <StationSelector
-          stations={stations}
-          originId={originId}
-          setOriginId={setOriginId}
-          destId={destId}
-          setDestId={setDestId}
-        />
+            <main style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <StationSelector
+                    stations={stations}
+                    originId={originId}
+                    setOriginId={setOriginId}
+                    destId={destId}
+                    setDestId={setDestId}
+                />
 
-        {originId && destId && (
-          <TrainList
-            originId={originId}
-            destId={destId}
-            onSelect={setSelectedTrain}
-            selectedTrainNo={selectedTrain?.trainNo || null}
-          />
-        )}
+                {originId && destId && (
+                    <TrainList
+                        originId={originId}
+                        destId={destId}
+                        onSelect={setSelectedTrain}
+                        selectedTrainNo={selectedTrain?.trainNo || null}
+                    />
+                )}
 
-        {selectedTrain && (
-          <ShareCard
-            train={selectedTrain}
-            originName={originName}
-            destName={destName}
-            template={template}
-            setTemplate={setTemplate}
-            resetTemplate={resetTemplate}
-          />
-        )}
+                {selectedTrain && (
+                    <ShareCard
+                        train={selectedTrain}
+                        originName={originName}
+                        destName={destName}
+                        template={template}
+                        setTemplate={setTemplate}
+                        resetTemplate={resetTemplate}
+                    />
+                )}
 
-        {(!originId || !destId) && (
-          <div style={{ textAlign: 'center', opacity: 0.5, marginTop: '2rem' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚉</div>
-            Select both stations to see upcoming trains.
-          </div>
-        )}
-      </main>
-    </div>
-  );
+                {(!originId || !destId) && (
+                    <div style={{ textAlign: 'center', opacity: 0.5, marginTop: '2rem' }}>
+                        Select both stations to see upcoming trains.
+                    </div>
+                )}
+            </main>
+        </div>
+    );
 }
 
 export default App;
