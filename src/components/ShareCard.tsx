@@ -13,6 +13,8 @@ interface ShareCardProps {
 }
 
 export function ShareCard({ train, destName }: ShareCardProps) {
+    const [showToast, setShowToast] = useState(false);
+
     // Calculate adjusted arrival time (with delay)
     const adjustedTime = useMemo(() => {
         if (!train) return '';
@@ -37,6 +39,11 @@ export function ShareCard({ train, destName }: ShareCardProps) {
         setMessage(defaultMessage);
     }, [defaultMessage]);
 
+    const displayToast = () => {
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+    };
+
     const handleShare = async () => {
         if (navigator.share) {
             try {
@@ -50,17 +57,16 @@ export function ShareCard({ train, destName }: ShareCardProps) {
         } else {
             // Fallback: Copy to clipboard
             navigator.clipboard.writeText(message);
-            alert('訊息已複製到剪貼簿！');
+            displayToast();
         }
     };
 
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(message);
-            alert('訊息已複製到剪貼簿！');
+            displayToast();
         } catch (err) {
             console.error('Copy failed', err);
-            alert('複製失敗，請手動複製訊息。');
         }
     };
 
@@ -79,6 +85,8 @@ export function ShareCard({ train, destName }: ShareCardProps) {
             <IconButton onClick={handleCopy} className='share-card-button'>
                 <Copy size={20} />
             </IconButton>
+
+            {showToast && <div className='toast'>已複製</div>}
         </div>
     );
 }
