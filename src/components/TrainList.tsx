@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, startTransition } from 'react';
+import { useEffect, useState, useCallback, startTransition, useRef } from 'react';
 import { api } from '../api/client';
 import type { TrainInfo } from '../types';
 
@@ -14,9 +14,25 @@ export function TrainList({ originId, destId, onSelect, selectedTrainNo }: Train
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
+    const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const lastFetchParamsRef = useRef<string>('');
+    const isFirstMountRef = useRef(true);
 
     const fetchSchedule = useCallback(() => {
         if (!originId || !destId) return;
+
+        // Prevent duplicate requests
+        const currentParams = `${originId}-${destId}`;
+        if (
+            lastFetchParamsRef.current === currentParams &&
+            lastFetchTime &&
+            Date.now() - lastFetchTime < 3000
+        ) {
+            console.log('Skipping duplicate request within 3 seconds');
+            return;
+        }
+
+        lastFetchParamsRef.current = currentParams;
         setLoading(true);
         setError(null);
 
@@ -62,12 +78,24 @@ export function TrainList({ originId, destId, onSelect, selectedTrainNo }: Train
                 setError('Failed to load schedule');
                 setLoading(false);
             });
-    }, [originId, destId, onSelect]);
+    }, [originId, destId, onSelect, lastFetchTime]);
 
     useEffect(() => {
-        startTransition(() => {
-            fetchSchedule();
-        });
+        // Clear any pending debounced fetch
+        if (fetchTimeoutRef.current) {
+            clearTimeout(fetchTimeoutRef.current);
+        }
+
+        // Debounce initial fetch (500ms) to allow rapid selection changes
+        // Skip debounce on first mount to avoid initial delay
+        const delay = isFirstMountRef.current ? 0 : 500;
+        isFirstMountRef.current = false;
+
+        fetchTimeoutRef.current = setTimeout(() => {
+            startTransition(() => {
+                fetchSchedule();
+            });
+        }, delay);
 
         // Poll every minute
         const interval = setInterval(() => {
@@ -76,7 +104,12 @@ export function TrainList({ originId, destId, onSelect, selectedTrainNo }: Train
             });
         }, 60000);
 
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            if (fetchTimeoutRef.current) {
+                clearTimeout(fetchTimeoutRef.current);
+            }
+        };
     }, [fetchSchedule]);
 
     if (!originId || !destId) return null;
