@@ -116,7 +116,7 @@ export function StationSelector({
                 setIsOpen={handleOriginDropdownOpen}
                 selectedId={originId}
                 onSelect={handleOriginSelect}
-                placeholder='From...'
+                placeholder='搜尋車站'
                 selectedStation={originStation}
                 onCacheSelection={(id) =>
                     localStorage.setItem(CACHED_ORIGIN_KEY, id)
@@ -137,7 +137,7 @@ export function StationSelector({
                 setIsOpen={handleDestDropdownOpen}
                 selectedId={destId}
                 onSelect={setDestId}
-                placeholder='To...'
+                placeholder='搜尋車站'
                 selectedStation={destStation}
             />
         </div>

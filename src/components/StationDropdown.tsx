@@ -50,7 +50,7 @@ export function StationDropdown({
                   s.name.includes(searchValue) ||
                   s.nameEn.toLowerCase().includes(searchValue.toLowerCase())
           )
-        : stations;
+        : [];
 
     const handleSelect = (id: string) => {
         onSelect(id);
