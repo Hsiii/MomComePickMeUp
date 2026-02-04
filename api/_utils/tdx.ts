@@ -1,63 +1,66 @@
 const CLIENT_ID = process.env.TDX_CLIENT_ID;
 const CLIENT_SECRET = process.env.TDX_CLIENT_SECRET;
 const TOKEN_URL =
-  'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
+    'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
 
 let cachedToken: string | null = null;
 let tokenExpiresAt: number = 0;
 
 async function getAccessToken(): Promise<string | null> {
-  const now = Date.now();
-  if (cachedToken && now < tokenExpiresAt) {
+    const now = Date.now();
+    if (cachedToken && now < tokenExpiresAt) {
+        return cachedToken;
+    }
+
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+        console.warn(
+            'TDX_CLIENT_ID or TDX_CLIENT_SECRET missing. Using Visitor Mode (limit 20 req/day).'
+        );
+        return null;
+    }
+
+    // Avoid logging credentials in production
+    if (process.env.NODE_ENV === 'development') {
+        console.log('Requesting new TDX access token...');
+    }
+
+    const params = new URLSearchParams();
+    params.append('grant_type', 'client_credentials');
+    params.append('client_id', CLIENT_ID);
+    params.append('client_secret', CLIENT_SECRET);
+
+    const response = await fetch(TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params,
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(
+            `Failed to get token: ${response.status} ${errorText}. Falling back to Visitor Mode.`
+        );
+        return null;
+    }
+
+    const data = await response.json();
+    cachedToken = data.access_token;
+    // Set expiration slightly before actual expiry (expires_in is in seconds)
+    tokenExpiresAt = now + data.expires_in * 1000 - 60000;
+
     return cachedToken;
-  }
-
-  if (!CLIENT_ID || !CLIENT_SECRET) {
-    console.warn(
-      'TDX_CLIENT_ID or TDX_CLIENT_SECRET missing. Using Visitor Mode (limit 20 req/day).'
-    );
-    return null;
-  }
-
-  console.log('Getting access token with CLIENT_ID:', CLIENT_ID?.substring(0, 10) + '...');
-
-  const params = new URLSearchParams();
-  params.append('grant_type', 'client_credentials');
-  params.append('client_id', CLIENT_ID);
-  params.append('client_secret', CLIENT_SECRET);
-
-  const response = await fetch(TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.warn(
-      `Failed to get token: ${response.status} ${errorText}. Falling back to Visitor Mode.`
-    );
-    return null;
-  }
-
-  const data = await response.json();
-  cachedToken = data.access_token;
-  // Set expiration slightly before actual expiry (expires_in is in seconds)
-  tokenExpiresAt = now + data.expires_in * 1000 - 60000;
-
-  return cachedToken;
 }
 
 export type TDXFormat = 'JSON' | 'XML';
 export type TDXTier = 'basic' | 'advanced';
 
 export interface TDXOptions {
-  /** Query parameters to append to the request */
-  searchParams?: Record<string, string>;
-  /** API tier: basic or advanced (default: basic) */
-  tier?: TDXTier;
-  /** Response format: JSON or XML (default: JSON) */
-  format?: TDXFormat;
+    /** Query parameters to append to the request */
+    searchParams?: Record<string, string>;
+    /** API tier: basic or advanced (default: basic) */
+    tier?: TDXTier;
+    /** Response format: JSON or XML (default: JSON) */
+    format?: TDXFormat;
 }
 
 /**
@@ -68,36 +71,40 @@ export interface TDXOptions {
  * @throws Error if the request fails
  */
 export async function fetchTDX(path: string, options: TDXOptions = {}) {
-  const { searchParams = {}, tier = 'basic', format = 'JSON' } = options;
+    const { searchParams = {}, tier = 'basic', format = 'JSON' } = options;
 
-  const token = await getAccessToken();
-  const url = new URL(`https://tdx.transportdata.tw/api/${tier}/${path}`);
+    const token = await getAccessToken();
+    const url = new URL(`https://tdx.transportdata.tw/api/${tier}/${path}`);
 
-  // Add all search parameters
-  Object.entries(searchParams).forEach(([key, value]) => url.searchParams.append(key, value));
+    // Add all search parameters
+    Object.entries(searchParams).forEach(([key, value]) =>
+        url.searchParams.append(key, value)
+    );
 
-  // Add required $format parameter
-  url.searchParams.append('$format', format);
+    // Add required $format parameter
+    url.searchParams.append('$format', format);
 
-  const headers: Record<string, string> = {
-    Accept: 'application/json',
-    'User-Agent':
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  };
+    const headers: Record<string, string> = {
+        'Accept': 'application/json',
+        'User-Agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    };
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-    console.log('Using authenticated request to:', url.toString());
-  } else {
-    console.warn('Making unauthenticated request to:', url.toString());
-  }
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+        console.log('Using authenticated request to:', url.toString());
+    } else {
+        console.warn('Making unauthenticated request to:', url.toString());
+    }
 
-  const response = await fetch(url.toString(), { headers });
+    const response = await fetch(url.toString(), { headers });
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`TDX API Error: ${response.status} ${response.statusText} - ${errorBody}`);
-  }
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(
+            `TDX API Error: ${response.status} ${response.statusText} - ${errorBody}`
+        );
+    }
 
-  return response.json();
+    return response.json();
 }

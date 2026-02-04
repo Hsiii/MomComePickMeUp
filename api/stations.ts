@@ -63,8 +63,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.status(200).json(stations);
     } catch (error: unknown) {
         console.error('Error fetching stations:', error);
+        // Return generic error message to avoid information disclosure
         const message =
-            error instanceof Error ? error.message : 'Unknown error';
+            process.env.NODE_ENV === 'development' && error instanceof Error
+                ? error.message
+                : 'Failed to fetch stations. Please try again.';
         res.status(500).json({ error: message });
     }
 }

@@ -26,6 +26,18 @@ interface TDXFullTimetable {
     StopTimes: TDXStopTime[];
 }
 
+// Validate station ID format (alphanumeric with optional dash)
+function isValidStationId(id: unknown): id is string {
+    return (
+        typeof id === 'string' && /^[A-Z0-9-]+$/i.test(id) && id.length <= 10
+    );
+}
+
+// Validate date format (YYYY-MM-DD)
+function isValidDate(date: unknown): date is string {
+    return typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { origin, dest, date } = req.query;
 
@@ -33,6 +45,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res
             .status(400)
             .json({ error: 'Missing origin or dest parameters' });
+    }
+
+    if (!isValidStationId(origin) || !isValidStationId(dest)) {
+        return res.status(400).json({ error: 'Invalid station ID format' });
+    }
+
+    if (date && !isValidDate(date)) {
+        return res
+            .status(400)
+            .json({ error: 'Invalid date format. Use YYYY-MM-DD' });
     }
 
     const queryDate =
@@ -146,8 +168,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
     } catch (error: unknown) {
         console.error('Error fetching schedule:', error);
+        // Return generic error message to avoid information disclosure
         const message =
-            error instanceof Error ? error.message : 'Unknown error';
+            process.env.NODE_ENV === 'development' && error instanceof Error
+                ? error.message
+                : 'Failed to fetch schedule. Please try again.';
         res.status(500).json({ error: message });
     }
 }
