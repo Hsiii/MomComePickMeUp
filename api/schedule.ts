@@ -66,21 +66,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
         }
 
-        // 2. Delay data temporarily disabled due to TDX API issues (404/429 errors)
-        // Will show all trains with status: 'unknown'
+        // 2. Fetch real-time delay data from TrainLiveBoard
         const delayMap = new Map<string, number>();
 
-        // Uncomment below when TDX delay endpoint is working:
-        // try {
-        //     const delayData = await fetchTDX('v3/Rail/TRA/TrainLiveBoard', { tier: 'basic' });
-        //     const liveData = delayData.LiveTrainDelays || delayData.TrainLiveBoardList || [];
-        //     liveData.forEach((d: any) => {
-        //         const delay = d.DelayTime ?? d.Delay ?? 0;
-        //         delayMap.set(d.TrainNo, delay);
-        //     });
-        // } catch (err) {
-        //     console.warn('Failed to fetch delay data, continuing without it:', err);
-        // }
+        try {
+            const delayData = await fetchTDX('v3/Rail/TRA/TrainLiveBoard', {
+                tier: 'basic',
+            });
+            const liveData =
+                delayData.TrainLiveBoards || delayData.TrainLiveBoardList || [];
+            liveData.forEach((d: { TrainNo: string; DelayTime?: number }) => {
+                const delay = d.DelayTime ?? 0;
+                delayMap.set(d.TrainNo, delay);
+            });
+        } catch (err) {
+            console.warn(
+                'Failed to fetch delay data, continuing without it:',
+                err
+            );
+        }
 
         // Cache schedule for 2 minutes on CDN, allow stale for 5 minutes while revalidating
         // This reduces load on TDX API while still providing reasonably fresh data
