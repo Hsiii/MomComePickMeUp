@@ -21,7 +21,7 @@ export function usePersistence() {
         () => localStorage.getItem(STORAGE_KEYS.TEMPLATE) || DEFAULT_TEMPLATE
     );
     const [autoDetectOrigin, setAutoDetectOrigin] = useState<boolean>(
-        () => localStorage.getItem(STORAGE_KEYS.AUTO_DETECT_ORIGIN) !== 'false'
+        () => localStorage.getItem(STORAGE_KEYS.AUTO_DETECT_ORIGIN) === 'true'
     );
     const [defaultDestId, setDefaultDestId] = useState<string>(
         () => localStorage.getItem(STORAGE_KEYS.DEFAULT_DEST) || ''
