@@ -38,4 +38,13 @@ export const STRINGS = {
     SETTINGS_ENABLE_LOCATION: '啟用定位',
     SETTINGS_DEFAULT_DESTINATION: '設定預設目的地',
     SETTINGS_SELECT_STATION: '選擇車站',
+
+    // iOS Install Prompt
+    IOS_INSTALL_TITLE: '加到主畫面',
+    IOS_INSTALL_SUBTITLE: (appName: string) =>
+        `將 ${appName} 加入主畫面以享受最佳使用體驗`,
+    IOS_INSTALL_STEP_1: '點擊底部的「分享」按鈕',
+    IOS_INSTALL_STEP_2: '選擇「加入主畫面」',
+    IOS_INSTALL_DISMISS: '知道了',
+    IOS_INSTALL_CLOSE: '關閉',
 } as const;

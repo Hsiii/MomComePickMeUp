@@ -6,6 +6,7 @@ import { Settings as SettingsIcon, TrainFront } from 'lucide-react';
 
 import { api } from './api/client';
 import { InitialLoadingScreen } from './components/InitialLoadingScreen';
+import { IOSInstallPrompt } from './components/IOSInstallPrompt';
 import { Settings } from './components/Settings';
 import { ShareCard } from './components/ShareCard';
 import { StationSelector } from './components/StationSelector';
@@ -51,6 +52,7 @@ function App() {
     return (
         <>
             {isInitialLoading && <InitialLoadingScreen />}
+            <IOSInstallPrompt />
             <header className='app-header'>
                 <div className='app-header-left'>
                     <TrainFront
