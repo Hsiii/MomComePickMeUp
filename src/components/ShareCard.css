@@ -24,6 +24,20 @@
     flex-shrink: 0;
 }
 
+.share-card-button.line-button {
+    background: #00c300;
+}
+
+.share-card-button.line-button:hover {
+    background: #00a000;
+}
+
+.share-card-button.share-button {
+    > * {
+        translate: -1px;
+    }
+}
+
 .toast {
     position: fixed;
     bottom: 6rem;

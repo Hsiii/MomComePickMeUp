@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, Share2 } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 
 import type { TrainInfo } from '../types';
 import { IconButton } from './IconButton';
@@ -44,11 +44,15 @@ export function ShareCard({ train, destName }: ShareCardProps) {
         setTimeout(() => setShowToast(false), 2000);
     };
 
+    const handleShareLine = () => {
+        const encodedMessage = encodeURIComponent(message);
+        window.open(`https://line.me/R/msg/text/?${encodedMessage}`, '_blank');
+    };
+
     const handleShare = async () => {
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: 'Mom, Come Pick Me Up!',
                     text: message,
                 });
             } catch (err) {
@@ -56,17 +60,12 @@ export function ShareCard({ train, destName }: ShareCardProps) {
             }
         } else {
             // Fallback: Copy to clipboard
-            navigator.clipboard.writeText(message);
-            displayToast();
-        }
-    };
-
-    const handleCopy = async () => {
-        try {
-            await navigator.clipboard.writeText(message);
-            displayToast();
-        } catch (err) {
-            console.error('Copy failed', err);
+            try {
+                await navigator.clipboard.writeText(message);
+                displayToast();
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
         }
     };
 
@@ -79,11 +78,17 @@ export function ShareCard({ train, destName }: ShareCardProps) {
                 onChange={(e) => setMessage(e.target.value)}
             />
 
-            <IconButton onClick={handleShare} className='share-card-button'>
-                <Share2 size={20} />
+            <IconButton
+                onClick={handleShare}
+                className='share-card-button share-button'
+            >
+                <Share2 />
             </IconButton>
-            <IconButton onClick={handleCopy} className='share-card-button'>
-                <Copy size={20} />
+            <IconButton
+                onClick={handleShareLine}
+                className='share-card-button line-button'
+            >
+                <img src='/line-icon.svg' alt='Line' />
             </IconButton>
 
             {showToast && <div className='toast'>已複製</div>}
