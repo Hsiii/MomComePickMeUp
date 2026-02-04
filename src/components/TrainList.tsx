@@ -7,6 +7,7 @@ import {
 } from 'react';
 
 import { api } from '../api/client';
+import { STRINGS } from '../constants';
 import type { TrainInfo } from '../types';
 import { Badge } from './Badge';
 import { TrainListSkeleton } from './TrainListSkeleton';
@@ -106,7 +107,7 @@ export function TrainList({
             })
             .catch((err) => {
                 console.error(err);
-                setError('Failed to load schedule');
+                setError(STRINGS.FAILED_TO_LOAD_SCHEDULE);
                 setLoading(false);
             });
     }, [originId, destId, onSelect, lastFetchTime]);
@@ -160,7 +161,7 @@ export function TrainList({
                     onClick={fetchSchedule}
                     className='btn-primary train-list-error-button'
                 >
-                    Retry
+                    {STRINGS.RETRY}
                 </button>
             </div>
         );
@@ -171,11 +172,15 @@ export function TrainList({
     }
 
     if (!shouldShowLoading && trains.length === 0)
-        return <div className='train-list-empty'>完了 回不了家了</div>;
+        return (
+            <div className='train-list-empty'>
+                {STRINGS.NO_TRAINS_AVAILABLE}
+            </div>
+        );
 
     return (
         <div>
-            <span className='label-dim'>選擇班次</span>
+            <span className='label-dim'>{STRINGS.SELECT_TRAIN}</span>
 
             <div className='train-list-container'>
                 {(shouldShowLoading ? [1, 2, 3] : trains).map((train, idx) => {
@@ -243,7 +248,7 @@ export function TrainList({
                                             variant='success'
                                             className='train-card-next-badge'
                                         >
-                                            Next
+                                            {STRINGS.NEXT_TRAIN}
                                         </Badge>
                                     )}
                                 </div>
@@ -261,8 +266,8 @@ export function TrainList({
                                     }
                                 >
                                     {trainData.delay && trainData.delay > 0
-                                        ? `+${trainData.delay} min`
-                                        : 'On Time'}
+                                        ? STRINGS.DELAY_MINUTES(trainData.delay)
+                                        : STRINGS.ON_TIME}
                                 </Badge>
                             </div>
                         </div>

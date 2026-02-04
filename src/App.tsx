@@ -9,6 +9,7 @@ import { InitialLoadingScreen } from './components/InitialLoadingScreen';
 import { ShareCard } from './components/ShareCard';
 import { StationSelector } from './components/StationSelector';
 import { TrainList } from './components/TrainList';
+import { STRINGS } from './constants';
 import { usePersistence } from './hooks/usePersistence';
 import type { Station, TrainInfo } from './types';
 
@@ -45,12 +46,14 @@ function App() {
                     size={64}
                     strokeWidth={2}
                 />
-                <h1 className='app-header-title'>OnTrack</h1>
+                <h1 className='app-header-title'>{STRINGS.APP_TITLE}</h1>
             </header>
             <div className='app-container'>
                 <main className='app-main'>
                     <div>
-                        <span className='label-dim'>選擇路線</span>
+                        <span className='label-dim'>
+                            {STRINGS.SELECT_ROUTE}
+                        </span>
                         <StationSelector
                             stations={stations}
                             originId={originId}
@@ -77,7 +80,7 @@ function App() {
 
                     {(!originId || !destId) && (
                         <div className='app-placeholder'>
-                            Select both stations to see upcoming trains.
+                            {STRINGS.SELECT_STATIONS_PROMPT}
                         </div>
                     )}
                 </main>

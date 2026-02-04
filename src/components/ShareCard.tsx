@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Share2 } from 'lucide-react';
 
+import { STRINGS } from '../constants';
 import type { TrainInfo } from '../types';
 import { IconButton } from './IconButton';
 
@@ -27,8 +28,8 @@ export function ShareCard({ train, destName }: ShareCardProps) {
 
     // Simple message: "<time>到<station>" or no train message
     const defaultMessage = train
-        ? `${adjustedTime}到${destName}`
-        : '好像沒車搭了';
+        ? STRINGS.ARRIVAL_MESSAGE(adjustedTime, destName)
+        : STRINGS.NO_TRAIN_MESSAGE;
 
     const [message, setMessage] = useState(defaultMessage);
 
@@ -80,7 +81,7 @@ export function ShareCard({ train, destName }: ShareCardProps) {
                 onClick={handleShareLine}
                 className='share-card-button line-button'
             >
-                <img src='/line-icon.svg' alt='Line' />
+                <img src='/line-icon.svg' alt={STRINGS.LINE_ICON_ALT} />
             </IconButton>
         </div>
     );

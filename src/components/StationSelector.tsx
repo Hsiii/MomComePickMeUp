@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 
+import { STRINGS } from '../constants';
 import type { Station } from '../types';
 import { StationDropdown } from './StationDropdown';
 
@@ -114,7 +115,7 @@ export function StationSelector({
                 setIsOpen={handleOriginDropdownOpen}
                 selectedId={originId}
                 onSelect={handleOriginSelect}
-                placeholder='搜尋車站'
+                placeholder={STRINGS.SEARCH_STATION}
                 selectedStation={originStation}
                 onCacheSelection={(id) =>
                     localStorage.setItem(CACHED_ORIGIN_KEY, id)
@@ -135,7 +136,7 @@ export function StationSelector({
                 setIsOpen={handleDestDropdownOpen}
                 selectedId={destId}
                 onSelect={setDestId}
-                placeholder='搜尋車站'
+                placeholder={STRINGS.SEARCH_STATION}
                 selectedStation={destStation}
             />
         </div>
