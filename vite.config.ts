@@ -10,14 +10,19 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: [
                 'favicon.ico',
+                'favicon.png',
                 'apple-touch-icon.png',
                 'mask-icon.svg',
+                'splash/*.png',
             ],
             manifest: {
                 name: 'MomComePickMeUp',
                 short_name: 'MomPickMe',
                 description: 'Notify Mom when to pick you up from the station',
                 theme_color: '#0f172a',
+                background_color: '#0f172a',
+                display: 'standalone',
+                start_url: '/',
                 icons: [
                     {
                         src: 'pwa-192x192.png',
@@ -28,6 +33,35 @@ export default defineConfig({
                         src: 'pwa-512x512.png',
                         sizes: '512x512',
                         type: 'image/png',
+                    },
+                    {
+                        src: 'pwa-512x512.png',
+                        sizes: '512x512',
+                        type: 'image/png',
+                        purpose: 'maskable',
+                    },
+                ],
+            },
+            workbox: {
+                // Limit precache to avoid iOS issues with large bundles
+                maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB limit
+                // Clean up old caches on update
+                cleanupOutdatedCaches: true,
+                // Skip waiting on new service worker
+                skipWaiting: true,
+                clientsClaim: true,
+                // Runtime caching strategies
+                runtimeCaching: [
+                    {
+                        urlPattern: /^https:\/\/api\./i,
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'api-cache',
+                            expiration: {
+                                maxEntries: 50,
+                                maxAgeSeconds: 60 * 60, // 1 hour
+                            },
+                        },
                     },
                 ],
             },

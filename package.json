@@ -9,7 +9,8 @@
         "lint": "eslint .",
         "format": "prettier --write .",
         "preview": "vite preview",
-        "prepare": "husky"
+        "prepare": "husky",
+        "generate-pwa-assets": "node scripts/generate-pwa-assets.js"
     },
     "lint-staged": {
         "*.{ts,tsx,js,jsx}": [
@@ -41,6 +42,7 @@
         "husky": "^9.1.7",
         "lint-staged": "^16.2.7",
         "prettier": "^3.8.1",
+        "sharp": "^0.34.5",
         "typescript": "~5.9.3",
         "typescript-eslint": "^8.46.4",
         "vite": "^7.2.4",
