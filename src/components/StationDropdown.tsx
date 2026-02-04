@@ -44,12 +44,18 @@ export function StationDropdown({
             document.removeEventListener('mousedown', handleClickOutside);
     }, [setIsOpen]);
 
+    // Normalize search value to match API's character usage (台 → 臺)
+    const normalizeSearchValue = (value: string) => value.replace(/台/g, '臺');
+
     const filteredStations = searchValue
-        ? stations.filter(
-              (s) =>
+        ? stations.filter((s) => {
+              const normalizedSearch = normalizeSearchValue(searchValue);
+              return (
                   s.name.includes(searchValue) ||
+                  s.name.includes(normalizedSearch) ||
                   s.nameEn.toLowerCase().includes(searchValue.toLowerCase())
-          )
+              );
+          })
         : [];
 
     const handleSelect = (id: string) => {
