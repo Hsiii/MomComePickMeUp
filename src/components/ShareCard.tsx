@@ -13,8 +13,6 @@ interface ShareCardProps {
 }
 
 export function ShareCard({ train, destName }: ShareCardProps) {
-    const [showToast, setShowToast] = useState(false);
-
     // Calculate adjusted arrival time (with delay)
     const adjustedTime = useMemo(() => {
         if (!train) return '';
@@ -39,11 +37,6 @@ export function ShareCard({ train, destName }: ShareCardProps) {
         setMessage(defaultMessage);
     }, [defaultMessage]);
 
-    const displayToast = () => {
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 2000);
-    };
-
     const handleShareLine = () => {
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://line.me/R/msg/text/?${encodedMessage}`, '_blank');
@@ -62,7 +55,6 @@ export function ShareCard({ train, destName }: ShareCardProps) {
             // Fallback: Copy to clipboard
             try {
                 await navigator.clipboard.writeText(message);
-                displayToast();
             } catch (err) {
                 console.error('Copy failed', err);
             }
@@ -90,8 +82,6 @@ export function ShareCard({ train, destName }: ShareCardProps) {
             >
                 <img src='/line-icon.svg' alt='Line' />
             </IconButton>
-
-            {showToast && <div className='toast'>已複製</div>}
         </div>
     );
 }
