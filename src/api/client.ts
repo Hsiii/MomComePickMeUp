@@ -1,7 +1,11 @@
-import type { Station, ScheduleResponse } from '../types';
+import type { ScheduleResponse, Station } from '../types';
 
 // In-flight request cache to prevent duplicate simultaneous requests
 const inflightRequests = new Map<string, Promise<unknown>>();
+
+// Client-side cache for stations (rarely change, cache for 1 hour)
+let stationsCache: { data: Station[]; expires: number } | null = null;
+const STATIONS_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 async function fetchJson<T>(url: string, retryCount = 0): Promise<T> {
     // Check if there's already an in-flight request for this URL
@@ -45,11 +49,23 @@ async function fetchJson<T>(url: string, retryCount = 0): Promise<T> {
 }
 
 export const api = {
-    getStations: () => fetchJson<Station[]>('/api/stations'),
+    getStations: async (): Promise<Station[]> => {
+        const now = Date.now();
+        // Return cached data if still valid
+        if (stationsCache && stationsCache.expires > now) {
+            return stationsCache.data;
+        }
+        // Fetch fresh data
+        const data = await fetchJson<Station[]>('/api/stations');
+        stationsCache = { data, expires: now + STATIONS_CACHE_TTL };
+        return data;
+    },
 
     getSchedule: (origin: string, dest: string, date?: string) => {
         const params = new URLSearchParams({ origin, dest });
         if (date) params.append('date', date);
-        return fetchJson<ScheduleResponse>(`/api/schedule?${params.toString()}`);
+        return fetchJson<ScheduleResponse>(
+            `/api/schedule?${params.toString()}`
+        );
     },
 };

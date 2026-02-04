@@ -1,9 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { fetchTDX } from './_utils/tdx.js';
+
 import type { TrainInfo as AppTrainInfo } from '../src/types.js';
+import { fetchTDX } from './_utils/tdx.js';
 
 // Simple in-memory cache for timetable data
-const timetableCache = new Map<string, { data: TDXFullTimetable[]; expires: number }>();
+const timetableCache = new Map<
+    string,
+    { data: TDXFullTimetable[]; expires: number }
+>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface TDXStopTime {
@@ -26,14 +30,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { origin, dest, date } = req.query;
 
     if (!origin || !dest) {
-        return res.status(400).json({ error: 'Missing origin or dest parameters' });
+        return res
+            .status(400)
+            .json({ error: 'Missing origin or dest parameters' });
     }
 
     const queryDate =
-        (date as string) || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
+        (date as string) ||
+        new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
 
     const isToday =
-        queryDate === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
+        queryDate ===
+        new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
 
     try {
         // 1. Fetch full day schedule with caching
@@ -52,7 +60,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             console.log('Using cached timetable data');
         } else {
             allTrains = await fetchTDX(scheduleUrl, { tier: 'basic' });
-            timetableCache.set(cacheKey, { data: allTrains, expires: now + CACHE_TTL });
+            timetableCache.set(cacheKey, {
+                data: allTrains,
+                expires: now + CACHE_TTL,
+            });
         }
 
         // 2. Delay data temporarily disabled due to TDX API issues (404/429 errors)
@@ -71,12 +82,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         //     console.warn('Failed to fetch delay data, continuing without it:', err);
         // }
 
+        // Cache schedule for 2 minutes on CDN, allow stale for 5 minutes while revalidating
+        // This reduces load on TDX API while still providing reasonably fresh data
+        res.setHeader(
+            'Cache-Control',
+            's-maxage=60, stale-while-revalidate=300'
+        );
+
         // 3. Filter and Transform trains that stop at both stations in correct order
         const trains: AppTrainInfo[] = (allTrains.TrainTimetables || [])
             .map((t: TDXFullTimetable) => {
                 const stops = t.StopTimes || [];
-                const originStop = stops.find((s: TDXStopTime) => s.StationID === origin);
-                const destStop = stops.find((s: TDXStopTime) => s.StationID === dest);
+                const originStop = stops.find(
+                    (s: TDXStopTime) => s.StationID === origin
+                );
+                const destStop = stops.find(
+                    (s: TDXStopTime) => s.StationID === dest
+                );
 
                 // Skip if train doesn't stop at both stations
                 if (!originStop || !destStop) return null;
@@ -89,7 +111,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 const trainNo = t.TrainInfo.TrainNo;
                 const delay = delayMap.get(trainNo);
 
-                let status: 'on-time' | 'delayed' | 'cancelled' | 'unknown' = 'unknown';
+                let status: 'on-time' | 'delayed' | 'cancelled' | 'unknown' =
+                    'unknown';
                 if (delay !== undefined) {
                     status = delay > 0 ? 'delayed' : 'on-time';
                 }
@@ -119,7 +142,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
     } catch (error: unknown) {
         console.error('Error fetching schedule:', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message =
+            error instanceof Error ? error.message : 'Unknown error';
         res.status(500).json({ error: message });
     }
 }

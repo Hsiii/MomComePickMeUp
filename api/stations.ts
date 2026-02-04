@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+
 import { fetchTDX } from './_utils/tdx.js';
 
 // Simple in-memory cache for stations data
@@ -39,7 +40,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Transform to our Station type
         const stations = (Array.isArray(data) ? data : data.Stations || []).map(
             (
-                s: TDXStation & { StationPosition?: { PositionLat?: number; PositionLon?: number } }
+                s: TDXStation & {
+                    StationPosition?: {
+                        PositionLat?: number;
+                        PositionLon?: number;
+                    };
+                }
             ) => ({
                 id: s.StationID,
                 name: s.StationName.Zh_tw,
@@ -49,10 +55,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             })
         );
 
+        // Cache stations for 1 hour on CDN/browser (stations rarely change)
+        res.setHeader(
+            'Cache-Control',
+            's-maxage=3600, stale-while-revalidate=86400'
+        );
         res.status(200).json(stations);
     } catch (error: unknown) {
         console.error('Error fetching stations:', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message =
+            error instanceof Error ? error.message : 'Unknown error';
         res.status(500).json({ error: message });
     }
 }
