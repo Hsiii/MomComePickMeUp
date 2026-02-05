@@ -4,7 +4,7 @@ import { fetchTDX } from './_utils/tdx.js';
 
 // Simple in-memory cache for stations data
 let stationsCache: { data: TDXStation[]; expires: number } | null = null;
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour (stations rarely change)
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours (stations rarely change)
 
 interface TDXStation {
     StationID: string;
@@ -55,10 +55,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             })
         );
 
-        // Cache stations for 1 hour on CDN/browser (stations rarely change)
+        // Cache stations for 24 hours on CDN (stations rarely change)
         res.setHeader(
             'Cache-Control',
-            's-maxage=3600, stale-while-revalidate=86400'
+            's-maxage=86400, stale-while-revalidate=604800'
         );
         res.status(200).json(stations);
     } catch (error: unknown) {

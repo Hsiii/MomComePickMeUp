@@ -3,9 +3,9 @@ import type { ScheduleResponse, Station } from '../types';
 // In-flight request cache to prevent duplicate simultaneous requests
 const inflightRequests = new Map<string, Promise<unknown>>();
 
-// Client-side cache for stations (rarely change, cache for 1 hour)
+// Client-side cache for stations (rarely change, cache for 24 hours)
 let stationsCache: { data: Station[]; expires: number } | null = null;
-const STATIONS_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const STATIONS_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 async function fetchJson<T>(url: string, retryCount = 0): Promise<T> {
     // Check if there's already an in-flight request for this URL
