@@ -4,18 +4,22 @@ import type { TrainInfo as AppTrainInfo } from '../src/types.js';
 import { fetchTDX, fetchTDXWithCache } from './_utils/tdx.js';
 
 // Simple in-memory cache for timetable data
+// DailyTrainTimetable is static for the day, safe to cache for 1 hour
 const timetableCache = new Map<
     string,
     { data: TDXFullTimetable[]; expires: number }
 >();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const TIMETABLE_CACHE_TTL = 60 * 60 * 1000; // 1 hour (static schedule data)
 
 // Cache for real-time delay data with Last-Modified support
-// TDX updates TrainLiveBoard when trains leave stations (~2-5 min intervals)
+// TDX updates TrainLiveBoard when trains leave stations (event-driven)
+// We use a minimum TTL to avoid excessive API calls, combined with If-Modified-Since
 let delayCache: {
     data: Map<string, number>;
     lastModified: string | null;
+    expires: number;
 } | null = null;
+const DELAY_CACHE_MIN_TTL = 30 * 1000; // 30 seconds minimum between TDX calls
 
 interface TDXStopTime {
     StationID: string;
@@ -91,58 +95,74 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             allTrains = await fetchTDX(scheduleUrl, { tier: 'basic' });
             timetableCache.set(cacheKey, {
                 data: allTrains,
-                expires: now + CACHE_TTL,
+                expires: now + TIMETABLE_CACHE_TTL,
             });
         }
 
-        // 2. Fetch real-time delay data from TrainLiveBoard (with conditional request)
-        // TDX returns 304 Not Modified if data hasn't changed since lastModified
+        // 2. Fetch real-time delay data from TrainLiveBoard
+        // Uses minimum TTL + If-Modified-Since for optimal caching:
+        // - Within TTL: Return cached data immediately (no API call)
+        // - After TTL: Make conditional request, TDX returns 304 if unchanged
         let delayMap: Map<string, number>;
 
-        try {
-            const response = await fetchTDXWithCache<{
-                TrainLiveBoards?: { TrainNo: string; DelayTime?: number }[];
-                TrainLiveBoardList?: { TrainNo: string; DelayTime?: number }[];
-            }>('v3/Rail/TRA/TrainLiveBoard', {
-                tier: 'basic',
-                ifModifiedSince: delayCache?.lastModified || undefined,
-            });
+        // Check if cache is still within minimum TTL
+        if (delayCache && delayCache.expires > now) {
+            delayMap = delayCache.data;
+            console.log('Using cached delay data (within TTL)');
+        } else {
+            // Cache expired or doesn't exist, make conditional request
+            try {
+                const response = await fetchTDXWithCache<{
+                    TrainLiveBoards?: { TrainNo: string; DelayTime?: number }[];
+                    TrainLiveBoardList?: {
+                        TrainNo: string;
+                        DelayTime?: number;
+                    }[];
+                }>('v3/Rail/TRA/TrainLiveBoard', {
+                    tier: 'basic',
+                    ifModifiedSince: delayCache?.lastModified || undefined,
+                });
 
-            if (response.notModified && delayCache) {
-                // Data hasn't changed, reuse cached data
-                delayMap = delayCache.data;
-                console.log('TrainLiveBoard not modified, using cached data');
-            } else if (response.data) {
-                // New data received, update cache
-                delayMap = new Map<string, number>();
-                const liveData =
-                    response.data.TrainLiveBoards ||
-                    response.data.TrainLiveBoardList ||
-                    [];
-                liveData.forEach(
-                    (d: { TrainNo: string; DelayTime?: number }) => {
-                        const delay = d.DelayTime ?? 0;
-                        delayMap.set(d.TrainNo, delay);
-                    }
+                if (response.notModified && delayCache) {
+                    // Data hasn't changed, reuse cached data and extend TTL
+                    delayMap = delayCache.data;
+                    delayCache.expires = now + DELAY_CACHE_MIN_TTL;
+                    console.log(
+                        'TrainLiveBoard not modified (304), extending cache TTL'
+                    );
+                } else if (response.data) {
+                    // New data received, update cache
+                    delayMap = new Map<string, number>();
+                    const liveData =
+                        response.data.TrainLiveBoards ||
+                        response.data.TrainLiveBoardList ||
+                        [];
+                    liveData.forEach(
+                        (d: { TrainNo: string; DelayTime?: number }) => {
+                            const delay = d.DelayTime ?? 0;
+                            delayMap.set(d.TrainNo, delay);
+                        }
+                    );
+                    delayCache = {
+                        data: delayMap,
+                        lastModified: response.lastModified,
+                        expires: now + DELAY_CACHE_MIN_TTL,
+                    };
+                    console.log(
+                        'TrainLiveBoard updated, lastModified:',
+                        response.lastModified
+                    );
+                } else {
+                    // Fallback to cached or empty
+                    delayMap = delayCache?.data || new Map<string, number>();
+                }
+            } catch (err) {
+                console.warn(
+                    'Failed to fetch delay data, continuing without it:',
+                    err
                 );
-                delayCache = {
-                    data: delayMap,
-                    lastModified: response.lastModified,
-                };
-                console.log(
-                    'TrainLiveBoard updated, lastModified:',
-                    response.lastModified
-                );
-            } else {
-                // Fallback to cached or empty
                 delayMap = delayCache?.data || new Map<string, number>();
             }
-        } catch (err) {
-            console.warn(
-                'Failed to fetch delay data, continuing without it:',
-                err
-            );
-            delayMap = delayCache?.data || new Map<string, number>();
         }
 
         // Cache schedule for 2 minutes on CDN, allow stale for 5 minutes while revalidating

@@ -20,7 +20,7 @@
 ### Tech Stack
 
 - **Frontend:** React 19 + TypeScript + Vite
-- **Styling:** Custom CSS with glassmorphism design
+- **Styling:** Custom CSS
 - **API:** Serverless functions (Vercel)
 - **Data Source:** TDX Taiwan Railway API
 - **PWA:** Vite Plugin PWA (service worker, offline support)
@@ -38,6 +38,7 @@
 │  │  │  StationSelector         │   │   │
 │  │  │  TrainList               │   │   │
 │  │  │  ShareCard               │   │   │
+│  │  │  Settings                │   │   │
 │  │  └──────────────────────────┘   │   │
 │  └─────────────────────────────────┘   │
 └─────────────────────────────────────────┘
@@ -70,27 +71,46 @@ OnTrack/
 │
 ├── 📂 src/                    # React application source
 │   ├── 📂 api/
-│   │   └── client.ts         # Frontend API client wrapper
+│   │   └── client.ts         # Frontend API client with caching
 │   ├── 📂 components/
-│   │   ├── StationSelector.tsx   # Station picker with search
+│   │   ├── Badge.tsx             # Status badge component
+│   │   ├── IconButton.tsx        # Reusable icon button
+│   │   ├── InitialLoadingScreen.tsx  # App loading splash
+│   │   ├── IOSInstallPrompt.tsx  # iOS PWA install prompt
+│   │   ├── LoadingSpinner.tsx    # Loading indicator
+│   │   ├── Settings.tsx          # Settings panel
+│   │   ├── ShareCard.tsx         # Message bar with share
+│   │   ├── StationDropdown.tsx   # Reusable station picker
+│   │   ├── StationSelector.tsx   # Origin/dest selector
 │   │   ├── TrainList.tsx         # Train schedule display
-│   │   └── ShareCard.tsx         # Message template & share
+│   │   ├── TrainListSkeleton.tsx # Loading skeleton
+│   │   └── index.ts              # Component exports
+│   ├── 📂 constants/
+│   │   ├── strings.ts        # Centralized UI strings
+│   │   └── index.ts          # Constants exports
 │   ├── 📂 hooks/
-│   │   └── usePersistence.ts     # localStorage hook
+│   │   ├── usePersistence.ts # localStorage hook
+│   │   └── index.ts          # Hooks exports
 │   ├── 📂 assets/            # Images, icons, etc.
 │   ├── App.tsx               # Main app container
-│   ├── App.css              # Component-specific styles
-│   ├── index.css            # Global styles
-│   ├── main.tsx             # React entry point
-│   └── types.ts             # TypeScript interfaces
+│   ├── App.css               # Component-specific styles
+│   ├── index.css             # Global styles
+│   ├── main.tsx              # React entry point
+│   └── types.ts              # TypeScript interfaces
 │
 ├── 📂 docs/                   # Documentation
-│   ├── TDX_RAIL_API.md       # API reference
-│   └── CODEBASE_TOUR.md      # This file
+│   ├── CACHING_ARCHITECTURE.md   # Multi-layer caching docs
+│   ├── TDX_RAIL_API.json         # API reference
+│   └── CODEBASE_TOUR.md          # This file
 │
 ├── 📂 public/                 # Static assets
+│   └── splash/               # PWA splash screens
+│
+├── 📂 scripts/                # Build scripts
+│   └── generate-pwa-assets.js # PWA asset generator
 │
 ├── vite.config.ts            # Vite + PWA configuration
+├── vercel.json               # Vercel deployment config
 ├── tsconfig.json             # TypeScript configuration
 ├── eslint.config.js          # ESLint rules
 ├── package.json              # Dependencies & scripts
@@ -103,7 +123,7 @@ OnTrack/
 
 ### 1. **App.tsx** (Main Container)
 
-**Location:** `src/App.tsx`
+**Location:** [src/App.tsx](../src/App.tsx)
 
 The root component that orchestrates the entire application.
 
@@ -113,6 +133,7 @@ The root component that orchestrates the entire application.
 - Fetches station list on mount
 - Coordinates data flow between components
 - Handles station selection → train list → share card flow
+- Manages settings panel visibility
 
 **State Flow:**
 
@@ -132,50 +153,71 @@ ShareCard (generates shareable message)
 
 ### 2. **StationSelector**
 
-**Location:** `src/components/StationSelector.tsx`
+**Location:** [src/components/StationSelector.tsx](../src/components/StationSelector.tsx)
 
 **Features:**
 
-- Dual station pickers (origin & destination)
-- Real-time search filtering (by Chinese name or English)
-- Swap button to reverse origin/destination
-- Glassmorphism UI design
+- Dual station pickers (origin & destination) using `StationDropdown`
+- Auto-detect origin via geolocation (when enabled)
+- Auto-fill destination from default settings
+- Caches last selected origin in localStorage
 
 **Props:**
 
 ```typescript
-{
-  stations: Station[];        // All available stations
-  originId: string;          // Selected origin ID
-  setOriginId: (id: string) => void;
-  destId: string;           // Selected destination ID
-  setDestId: (id: string) => void;
+interface StationSelectorProps {
+    stations: Station[];
+    originId: string;
+    setOriginId: (id: string) => void;
+    destId: string;
+    setDestId: (id: string) => void;
+    defaultDestId?: string;
+    autoDetectOrigin: boolean;
 }
 ```
 
-**Search Logic:**
+**Auto-Detection Logic:**
 
 ```typescript
-filteredOrigin = stations.filter(
-    (s) =>
-        s.name.includes(originSearch) ||
-        s.nameEn.toLowerCase().includes(originSearch.toLowerCase())
-);
+// When autoDetectOrigin is enabled:
+// 1. Request geolocation
+// 2. Find nearest station by lat/lon distance
+// 3. Cache selection in localStorage
+
+// When disabled:
+// 1. Use cached origin from localStorage
+// 2. Fallback to first station
 ```
 
 ---
 
-### 3. **TrainList**
+### 3. **StationDropdown**
 
-**Location:** `src/components/TrainList.tsx`
+**Location:** [src/components/StationDropdown.tsx](../src/components/StationDropdown.tsx)
+
+**Features:**
+
+- Reusable dropdown component for station selection
+- Real-time search filtering (by Chinese name or English)
+- Click-outside to close
+- Used by both `StationSelector` and `Settings`
+
+---
+
+### 4. **TrainList**
+
+**Location:** [src/components/TrainList.tsx](../src/components/TrainList.tsx)
 
 **Features:**
 
 - Auto-fetches schedule when origin/dest changes
-- Displays next 3 trains centered around current time
-- Shows train status (on-time, delayed, cancelled)
+- Displays 3 trains centered around current time
+- Shows train status (on-time, delayed) with `Badge` component
 - Auto-selects recommended train (next departure)
 - Click to select different train
+- Auto-refresh every 30 seconds
+- Pull-to-refresh on mobile
+- Prevents duplicate requests within 3 seconds
 
 **Smart Train Selection:**
 
@@ -186,52 +228,92 @@ const nextTrainIndex = trains.findIndex(
 );
 
 // Show context: 1 previous + 2 upcoming trains
-const displayTrains = trains.slice(
-    Math.max(0, nextTrainIndex - 1),
-    nextTrainIndex + 2
-);
+const start = Math.max(0, nextTrainIndex - 1);
+const displayTrains = res.trains.slice(start, start + 3);
 ```
 
 **Props:**
 
 ```typescript
-{
-  originId: string;
-  destId: string;
-  onSelect: (train: TrainInfo) => void;
-  selectedTrainNo: string | null;
+interface TrainListProps {
+    originId: string;
+    destId: string;
+    onSelect: (train: TrainInfo) => void;
+    selectedTrainNo: string | null;
 }
 ```
 
 ---
 
-### 4. **ShareCard**
+### 5. **ShareCard**
 
-**Location:** `src/components/ShareCard.tsx`
+**Location:** [src/components/ShareCard.tsx](../src/components/ShareCard.tsx)
 
 **Features:**
 
-- Editable message template with placeholders
-- Live preview of final message
-- Share via Web Share API (mobile) or copy to clipboard (desktop)
-- Persists custom template to localStorage
+- Editable message input (auto-generated from template)
+- Calculates adjusted arrival time (includes delay)
+- Share via Web Share API (mobile)
+- Direct LINE share button
+- Copy to clipboard fallback (desktop)
 
-**Template Variables:**
+**Message Format:**
 
-- `{train_type}` → e.g., "自強號"
-- `{train_no}` → e.g., "145"
-- `{direction}` → "Clockwise" or "Counter-clockwise"
-- `{origin}` → Origin station name
-- `{dest}` → Destination station name
-- `{time}` → Arrival time (HH:mm)
-- `{status}` → "On Time" or "Delayed Xm"
-
-**Default Template:**
+Default message uses `STRINGS.ARRIVAL_MESSAGE`:
 
 ```
-Hi Mom! I'm taking the {train_type} {train_no} ({direction}).
-Arriving at {dest} at {time}. Status: {status}.
+{adjusted_time}到{dest}
 ```
+
+Example: `14:35到新竹`
+
+**Props:**
+
+```typescript
+interface ShareCardProps {
+    train: TrainInfo | null;
+    originName: string;
+    destName: string;
+}
+```
+
+---
+
+### 6. **Settings**
+
+**Location:** [src/components/Settings.tsx](../src/components/Settings.tsx)
+
+**Features:**
+
+- Toggle auto-detect origin (geolocation)
+- Set default destination station
+- Collapsible panel in header
+
+**Props:**
+
+```typescript
+interface SettingsProps {
+    stations: Station[];
+    autoDetectOrigin: boolean;
+    setAutoDetectOrigin: (value: boolean) => void;
+    defaultDestId: string;
+    setDefaultDestId: (id: string) => void;
+    setDestId: (id: string) => void;
+}
+```
+
+---
+
+### 7. **Supporting Components**
+
+| Component              | Location                                                               | Purpose                                |
+| ---------------------- | ---------------------------------------------------------------------- | -------------------------------------- |
+| `Badge`                | [Badge.tsx](../src/components/Badge.tsx)                               | Status badges (on-time, delayed, next) |
+| `IconButton`           | [IconButton.tsx](../src/components/IconButton.tsx)                     | Styled icon buttons                    |
+| `InitialLoadingScreen` | [InitialLoadingScreen.tsx](../src/components/InitialLoadingScreen.tsx) | Full-screen loading splash             |
+| `IOSInstallPrompt`     | [IOSInstallPrompt.tsx](../src/components/IOSInstallPrompt.tsx)         | iOS PWA install instructions           |
+| `LoadingSpinner`       | [LoadingSpinner.tsx](../src/components/LoadingSpinner.tsx)             | Inline loading indicator               |
+| `TrainListSkeleton`    | [TrainListSkeleton.tsx](../src/components/TrainListSkeleton.tsx)       | Loading skeleton for train list        |
 
 ---
 
@@ -239,16 +321,28 @@ Arriving at {dest} at {time}. Status: {status}.
 
 ### Frontend Client (`src/api/client.ts`)
 
-Simple wrapper around fetch with error handling:
+Wrapper around fetch with caching and deduplication:
 
 ```typescript
 export const api = {
-    getStations: () => fetchJson<Station[]>('/api/stations'),
+    getStations: async (): Promise<Station[]> => {
+        // Returns cached data if still valid (1 hour TTL)
+        if (stationsCache && stationsCache.expires > now) {
+            return stationsCache.data;
+        }
+        return fetchJson<Station[]>('/api/stations');
+    },
 
     getSchedule: (origin: string, dest: string, date?: string) =>
         fetchJson<ScheduleResponse>(`/api/schedule?${params}`),
 };
 ```
+
+**Features:**
+
+- In-flight request deduplication
+- Stations cache (1 hour TTL)
+- 429 rate limit retry with exponential backoff
 
 ---
 
@@ -258,7 +352,7 @@ export const api = {
 
 **Endpoint:** `GET /api/stations`
 
-**Purpose:** Returns list of all TRA stations
+**Purpose:** Returns list of all TRA stations with coordinates
 
 **Data Source:** TDX API → `/v3/Rail/TRA/Station`
 
@@ -266,13 +360,16 @@ export const api = {
 
 ```typescript
 Station[] = [
-  { id: "1000", name: "臺北", nameEn: "Taipei" },
-  { id: "1008", name: "新竹", nameEn: "Hsinchu" },
+  { id: "1000", name: "臺北", nameEn: "Taipei", lat: 25.0478, lon: 121.5170 },
+  { id: "1008", name: "新竹", nameEn: "Hsinchu", lat: 24.8017, lon: 120.9714 },
   // ...
 ]
 ```
 
-**Caching:** Stations rarely change, consider caching response
+**Caching:**
+
+- In-memory: 1 hour
+- CDN: `s-maxage=3600, stale-while-revalidate=86400`
 
 ---
 
@@ -290,32 +387,26 @@ Station[] = [
 
 **Data Flow:**
 
-1. Fetch daily timetable from TDX
-2. Fetch live delay data for all trains
-3. Merge delay info into timetable
-4. Map status based on delay time
+1. Fetch full daily timetable from TDX (cached 5 min)
+2. Fetch live delay data (always fresh)
+3. Filter trains stopping at both stations
+4. Merge delay info into timetable
 5. Return enriched train list
 
 **TDX API Calls:**
 
 ```typescript
-// 1. Schedule
-const scheduleUrl = `v3/Rail/TRA/DailyTrainTimetable/OD/${origin}/to/${dest}/${date}`;
+// 1. Schedule (cached)
+const scheduleUrl = `v3/Rail/TRA/DailyTrainTimetable/Today`;
 
-// 2. Live Delays
-const delayUrl = 'v3/Rail/TRA/LiveTrainDelay';
+// 2. Live Delays (always fresh)
+const delayUrl = 'v3/Rail/TRA/TrainLiveBoard';
 ```
 
-**Status Mapping:**
+**Caching:**
 
-```typescript
-const getStatus = (delay?: number) => {
-    if (delay === undefined) return 'unknown';
-    if (delay === 0) return 'on-time';
-    if (delay > 0) return 'delayed';
-    return 'cancelled'; // delay < 0
-};
-```
+- In-memory timetable: 5 minutes
+- CDN: `s-maxage=60, stale-while-revalidate=300`
 
 ---
 
@@ -328,21 +419,6 @@ const getStatus = (delay?: number) => {
 - Token caching with expiration tracking
 - Auto-refresh before expiry (60s buffer)
 - Fallback to visitor mode if credentials missing
-- Supports both authenticated and guest access
-
-**Flow:**
-
-```typescript
-1. Check token cache
-   ↓ (expired or missing)
-2. Request new token via OAuth2
-   ↓
-3. Cache token (expires_in - 60s)
-   ↓
-4. Make authenticated API call
-   ↓
-5. Return JSON response
-```
 
 **Environment Variables Required:**
 
@@ -354,7 +430,6 @@ TDX_CLIENT_SECRET=your_client_secret
 **Visitor Mode:**
 
 - If credentials missing, API calls work but limited to 20 requests/day/IP
-- Useful for development without API keys
 
 ---
 
@@ -366,9 +441,13 @@ TDX_CLIENT_SECRET=your_client_secret
 
 **Persisted Data:**
 
-- `ontrack_origin`: Last selected origin station
-- `ontrack_dest`: Last selected destination station
-- `ontrack_template`: Custom message template
+| Key                          | Description                               |
+| ---------------------------- | ----------------------------------------- |
+| `ontrack_origin`             | Last selected origin station              |
+| `ontrack_dest`               | Last selected destination station         |
+| `ontrack_template`           | Custom message template                   |
+| `ontrack_auto_detect_origin` | Whether to auto-detect origin by location |
+| `ontrack_default_dest`       | Default destination station ID            |
 
 **Usage:**
 
@@ -378,21 +457,49 @@ const {
     setOriginId,
     destId,
     setDestId,
-    template,
-    setTemplate,
-    resetTemplate,
+    autoDetectOrigin,
+    setAutoDetectOrigin,
+    defaultDestId,
+    setDefaultDestId,
 } = usePersistence();
 
 // Auto-saves to localStorage on every update
 setOriginId('1000'); // Saves immediately
 ```
 
-**Why localStorage?**
+---
 
-- No backend user accounts needed
-- Instant load on revisit
-- Works offline (PWA)
-- Simple implementation
+## 📝 Centralized Strings
+
+### strings.ts (`src/constants/strings.ts`)
+
+All user-facing strings are centralized for consistency and future localization:
+
+```typescript
+export const STRINGS = {
+    // App Header
+    APP_TITLE: 'OnTrack',
+
+    // Labels
+    SELECT_ROUTE: '選擇路線',
+    SELECT_TRAIN: '選擇班次',
+    SEARCH_STATION: '搜尋車站',
+
+    // Train Status
+    ON_TIME: 'On Time',
+    NEXT_TRAIN: 'Next',
+    DELAY_MINUTES: (minutes: number) => `+${minutes} min`,
+
+    // Share Card
+    ARRIVAL_MESSAGE: (time: string, station: string) => `${time}到${station}`,
+    NO_TRAIN_MESSAGE: '好像沒車搭了',
+
+    // Settings
+    SETTINGS_AUTO_DETECT_ORIGIN: '自動偵測起點站',
+    SETTINGS_DEFAULT_DESTINATION: '設定預設目的地',
+    // ...
+};
+```
 
 ---
 
@@ -400,42 +507,26 @@ setOriginId('1000'); // Saves immediately
 
 ### Design System
 
-- **Theme:** Dark mode with glassmorphism
-- **Colors:** Navy blue gradient background
-- **Effects:** Backdrop blur, subtle shadows
+- **Theme:** Dark mode
 - **Responsive:** Mobile-first design
 
-### Global Styles (`src/index.css`)
+### File Organization
 
-- CSS Variables for theme colors
-- Base typography
-- Background gradient animation
-- Responsive utilities
+| File                   | Purpose                                   |
+| ---------------------- | ----------------------------------------- |
+| `src/index.css`        | Global styles, CSS variables, background  |
+| `src/App.css`          | Main app layout, header, container styles |
+| `src/components/*.css` | Component-specific styles (co-located)    |
 
-### Component Styles (`src/App.css`)
-
-- `.glass-panel`: Glassmorphic cards
-- `.train-card`: Interactive train selection cards
-- `.search-input`: Styled input fields
-- Animations & transitions
-
-**Key CSS Classes:**
+### Key CSS Classes
 
 ```css
-.glass-panel {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-}
-
 .train-card {
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .train-card:hover {
-    background: rgba(255, 255, 255, 0.1);
     transform: translateY(-2px);
 }
 ```
@@ -447,7 +538,7 @@ setOriginId('1000'); // Saves immediately
 ### Development
 
 ```bash
-npm run dev         # Start Vite dev server (http://localhost:5173)
+vercel dev         # Start dev server with API functions
 ```
 
 ### Production Build
@@ -474,25 +565,12 @@ npm run format     # Prettier format
 
 - **Service Worker:** Auto-generated by `vite-plugin-pwa`
 - **Offline Support:** Caches static assets
-- **Install Prompt:** Add to home screen on mobile
+- **Install Prompt:** iOS-specific install instructions (`IOSInstallPrompt`)
 - **Auto-Update:** New versions deploy seamlessly
 
-**Manifest:**
+**PWA Assets:**
 
-```json
-{
-    "name": "OnTrack",
-    "short_name": "OnTrack",
-    "theme_color": "#0f172a",
-    "icons": ["192x192.png", "512x512.png"]
-}
-```
-
-**Testing PWA:**
-
-1. Run `npm run build && npm run preview`
-2. Open Chrome DevTools → Application → Service Workers
-3. Check "Offline" and reload page
+Generated via `scripts/generate-pwa-assets.js` including splash screens in `public/splash/`
 
 ---
 
@@ -505,6 +583,8 @@ interface Station {
     id: string; // Station ID (e.g., "1000")
     name: string; // Chinese name (e.g., "臺北")
     nameEn: string; // English name (e.g., "Taipei")
+    lat?: number; // Latitude (for geolocation)
+    lon?: number; // Longitude (for geolocation)
 }
 ```
 
@@ -514,7 +594,7 @@ interface Station {
 interface TrainInfo {
     trainNo: string; // Train number (e.g., "145")
     trainType: string; // Type (e.g., "自強號")
-    direction: 0 | 1; // 0: Clockwise, 1: Counter-clockwise
+    direction: number; // 0: Shunxing, 1: Nixing
     originStation: string; // Starting station
     destinationStation: string; // Final destination
     departureTime: string; // HH:mm format
@@ -535,12 +615,11 @@ The project is configured for Vercel deployment:
 3. **Environment:** Set `TDX_CLIENT_ID` and `TDX_CLIENT_SECRET` in Vercel dashboard
 4. **Auto-Deploy:** Push to `main` branch triggers deployment
 
-**Vercel Config:**
+**Vercel Config (`vercel.json`):**
 
 - Framework: Vite
 - Build Command: `npm run build`
 - Output Directory: `dist`
-- Install Command: `npm install`
 
 ---
 
@@ -551,57 +630,49 @@ The project is configured for Vercel deployment:
 ```
 1. User lands on app
    → App.tsx loads
-   → usePersistence() restores last selections from localStorage
+   → InitialLoadingScreen shows
+   → usePersistence() restores settings from localStorage
    → Fetches stations from /api/stations
+   → InitialLoadingScreen hides
 
-2. User selects "Taipei" (1000) and "Hsinchu" (1008)
-   → StationSelector updates state via setOriginId/setDestId
-   → Values saved to localStorage automatically
+2. Auto-detection (if enabled)
+   → StationSelector requests geolocation
+   → Finds nearest station by lat/lon
+   → Sets origin automatically
 
-3. TrainList detects origin/dest change
-   → Triggers useEffect
+3. User selects destination "Hsinchu" (1008)
+   → StationDropdown filters stations
+   → setDestId(id) saves to localStorage
+
+4. TrainList detects origin/dest change
+   → Shows TrainListSkeleton
    → Calls api.getSchedule('1000', '1008')
    → Backend fetches from TDX + merges delays
    → Returns 3 relevant trains
    → Auto-selects next departure
 
-4. User clicks a different train
+5. User clicks a different train
    → onSelect(train) callback updates App state
    → selectedTrain propagates to ShareCard
 
-5. ShareCard generates message
-   → Replaces template variables with train data
-   → Shows live preview
-   → User edits template (auto-saves to localStorage)
+6. ShareCard generates message
+   → Calculates adjusted arrival time (with delay)
+   → Shows editable message: "14:35到新竹"
+   → User can edit message
 
-6. User clicks "Share"
+7. User clicks share button
    → navigator.share() on mobile (system share sheet)
-   → navigator.clipboard.writeText() on desktop
+   → Or LINE deep link for direct LINE share
+   → Or navigator.clipboard.writeText() fallback
    → Message shared! 🎉
 ```
 
 ---
 
-## 🧪 Testing Checklist
-
-- [ ] Station search (Chinese & English)
-- [ ] Swap origin/destination button
-- [ ] Train auto-selection (next departure)
-- [ ] Manual train selection
-- [ ] Live delay data accuracy
-- [ ] Template customization & persistence
-- [ ] Share on mobile (Web Share API)
-- [ ] Copy to clipboard on desktop
-- [ ] localStorage persistence across sessions
-- [ ] PWA install prompt on mobile
-- [ ] Offline mode (cached static assets)
-- [ ] Edge cases: No trains found, API errors
-
----
-
 ## 📚 Further Reading
 
-- [TDX Rail API Documentation](./TDX_RAIL_API.md)
+- [Caching Architecture](./CACHING_ARCHITECTURE.md)
+- [TDX Rail API Documentation](./TDX_RAIL_API.json)
 - [Vite Documentation](https://vite.dev/)
 - [React 19 Docs](https://react.dev/)
 - [Vercel Serverless Functions](https://vercel.com/docs/functions)
@@ -614,10 +685,11 @@ The project is configured for Vercel deployment:
 When adding features:
 
 1. Update TypeScript interfaces in `src/types.ts`
-2. Follow existing component patterns
-3. Maintain glassmorphism design language
-4. Test on mobile (PWA features)
-5. Update this tour if architecture changes
+2. Add strings to `src/constants/strings.ts`
+3. Follow existing component patterns
+4. Co-locate CSS with components
+5. Test on mobile (PWA features)
+6. Update this tour if architecture changes
 
 ---
 
