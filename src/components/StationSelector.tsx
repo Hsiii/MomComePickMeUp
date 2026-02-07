@@ -41,8 +41,8 @@ export function StationSelector({
 
         // If auto-detect is disabled, use cached origin or first station (only on initial load)
         if (!autoDetectOrigin) {
-            if (!hasAutoSelected.current && !originId) {
-                hasAutoSelected.current = true;
+            hasAutoSelected.current = false; // Reset so toggling back on will re-trigger geolocation
+            if (!originId) {
                 const cachedOriginId = localStorage.getItem(CACHED_ORIGIN_KEY);
                 if (
                     cachedOriginId &&
@@ -57,14 +57,29 @@ export function StationSelector({
         }
 
         // Auto-detect is enabled - request geolocation
+        if (hasAutoSelected.current) return;
+        hasAutoSelected.current = true;
+
         if (!navigator.geolocation) {
             // Fallback: select first station
             if (stations[0]) setOriginId(stations[0].id);
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
+        const fallbackToCached = () => {
+            const cachedOriginId = localStorage.getItem(CACHED_ORIGIN_KEY);
+            if (
+                cachedOriginId &&
+                stations.find((s) => s.id === cachedOriginId)
+            ) {
+                setOriginId(cachedOriginId);
+            } else if (stations[0]) {
+                setOriginId(stations[0].id);
+            }
+        };
+
+        const requestGeolocation = () => {
+            navigator.geolocation.getCurrentPosition((position) => {
                 const { latitude, longitude } = position.coords;
                 let nearestStation = stations[0];
                 let minDistance = Number.MAX_VALUE;
@@ -86,20 +101,34 @@ export function StationSelector({
                     setOriginId(nearestStation.id);
                     localStorage.setItem(CACHED_ORIGIN_KEY, nearestStation.id);
                 }
-            },
-            () => {
-                // Fallback on error: try cached origin first
-                const cachedOriginId = localStorage.getItem(CACHED_ORIGIN_KEY);
-                if (
-                    cachedOriginId &&
-                    stations.find((s) => s.id === cachedOriginId)
-                ) {
-                    setOriginId(cachedOriginId);
-                } else if (stations[0]) {
-                    setOriginId(stations[0].id);
-                }
-            }
-        );
+            }, fallbackToCached);
+        };
+
+        // Check permission state first to avoid showing the browser prompt on every load.
+        // Only call getCurrentPosition if permission was already granted.
+        if (navigator.permissions) {
+            navigator.permissions
+                .query({ name: 'geolocation' })
+                .then((result) => {
+                    if (result.state === 'granted') {
+                        // Permission already granted — silently get position
+                        requestGeolocation();
+                    } else if (result.state === 'prompt') {
+                        // Never asked yet — ask once, then respect the answer
+                        requestGeolocation();
+                    } else {
+                        // Denied — fall back to cache
+                        fallbackToCached();
+                    }
+                })
+                .catch(() => {
+                    // Permissions API failed — just request geolocation directly
+                    requestGeolocation();
+                });
+        } else {
+            // Permissions API not supported — request directly
+            requestGeolocation();
+        }
     }, [stations, setOriginId, autoDetectOrigin, originId]);
 
     // Auto-fill destination with default destination (takes priority over cache)
