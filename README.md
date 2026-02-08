@@ -1,6 +1,8 @@
-# OnTrack
+# OnTrack - 台鐵即時時刻表
 
-A Taiwan railway train schedule PWA. Built with <a href="https://vite.dev/">Vite</a>, <a href="https://react.dev/">React</a>, and <a href="https://vercel.com/">Vercel</a>.
+Taiwan Railway (TRA/台鐵) real-time train schedule PWA for commuters.
+
+![demo](https://raw.githubusercontent.com/Hsiii/OnTrack/main/public/demo.png)
 
 The app shows real-time train schedules between stations, automatically suggests the next departing train, and provides a quick share feature to send arrival time messages. Perfect for daily commuters who need a simple way to coordinate rides.
 
@@ -77,3 +79,7 @@ OnTrack is a Progressive Web App — install it for a native app-like experience
 - **Styling**: pure CSS
 - **API**: TDX Taiwan Railway API with Vercel serverless functions
 - **Deployment**: Vercel
+
+## Keywords
+
+台鐵時刻表 • Taiwan Railway • TRA • 火車時刻查詢 • train schedule • PWA
