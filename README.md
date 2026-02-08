@@ -2,7 +2,7 @@
 
 Taiwan Railway (TRA/台鐵) real-time train schedule PWA for commuters.
 
-![demo](https://raw.githubusercontent.com/Hsiii/OnTrack/main/public/demo.png)
+<img alt="demo" src="https://raw.githubusercontent.com/Hsiii/OnTrack/main/public/demo.png" width="280" />
 
 The app shows real-time train schedules between stations, automatically suggests the next departing train, and provides a quick share feature to send arrival time messages. Perfect for daily commuters who need a simple way to coordinate rides.
 
