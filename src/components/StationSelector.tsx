@@ -34,9 +34,14 @@ export function StationSelector({
     const [destDropdownOpen, setDestDropdownOpen] = useState(false);
     const hasAutoSelected = useRef(false);
     const hasAutoFilledDest = useRef(false);
+    const prevAutoDetectOrigin = useRef(autoDetectOrigin);
 
     // Auto-select nearest station when autoDetectOrigin is enabled
     useEffect(() => {
+        const wasAutoDetectOrigin = prevAutoDetectOrigin.current;
+        const isToggledOn = !wasAutoDetectOrigin && autoDetectOrigin;
+        prevAutoDetectOrigin.current = autoDetectOrigin;
+
         if (stations.length === 0) return;
 
         // If auto-detect is disabled, use cached origin or first station (only on initial load)
@@ -103,6 +108,13 @@ export function StationSelector({
                 }
             }, fallbackToCached);
         };
+
+        // If user explicitly toggled this on, always try requesting geolocation again.
+        // This allows retrying permission after a prior rejection.
+        if (isToggledOn) {
+            requestGeolocation();
+            return;
+        }
 
         // Check permission state first to avoid showing the browser prompt on every load.
         // Only call getCurrentPosition if permission was already granted.
