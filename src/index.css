@@ -56,6 +56,7 @@ html {
 body {
     margin: 0;
     font-family: var(--font-sans);
+    line-height: 1.5;
     background-color: var(--color-bg);
     color: var(--color-text);
     -webkit-font-smoothing: antialiased;
@@ -74,6 +75,7 @@ body {
 
 button {
     font-family: inherit;
+    line-height: 1.2;
     cursor: pointer;
     border: none;
     background: none;
@@ -154,6 +156,8 @@ select {
     color: var(--color-text-dim);
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
+    line-height: 1.4;
+    min-height: 1.25rem;
 }
 
 .search-input {

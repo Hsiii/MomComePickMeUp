@@ -22,6 +22,8 @@
     font-size: var(--text-sm);
     color: var(--color-text-dim);
     font-weight: var(--font-medium);
+    line-height: 1.4;
+    min-height: 2.5rem;
 }
 
 .settings-switch-row {

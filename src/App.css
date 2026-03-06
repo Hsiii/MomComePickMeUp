@@ -25,11 +25,14 @@
     font-size: var(--text-lg);
     font-weight: var(--font-bold);
     letter-spacing: 0.02em;
+    line-height: 1.2;
+    min-height: 1.5rem;
 }
 
 .app-header-actions {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
 }
 
 .settings-button {
@@ -89,4 +92,6 @@
     text-align: center;
     opacity: 0.5;
     margin-top: 2rem;
+    line-height: 1.5;
+    min-height: 3rem;
 }

@@ -1,0 +1,25 @@
+.language-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--color-text-dim);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    line-height: 1;
+    min-height: 32px;
+}
+
+.language-dropdown-trigger:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.language-toggle-label {
+    color: inherit;
+    font-weight: var(--font-medium);
+}
