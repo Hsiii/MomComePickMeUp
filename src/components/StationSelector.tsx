@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 
-import { STRINGS } from '../constants';
+import { useI18n } from '../i18n';
 import type { Station } from '../types';
 import { StationDropdown } from './StationDropdown';
 
@@ -28,11 +28,13 @@ export function StationSelector({
     defaultDestId,
     autoDetectOrigin,
 }: StationSelectorProps) {
+    const { t } = useI18n();
     const [originSearch, setOriginSearch] = useState('');
     const [destSearch, setDestSearch] = useState('');
     const [originDropdownOpen, setOriginDropdownOpen] = useState(false);
     const [destDropdownOpen, setDestDropdownOpen] = useState(false);
     const hasAutoSelected = useRef(false);
+    const isGeolocationPending = useRef(false);
     const hasAutoFilledDest = useRef(false);
     const prevAutoDetectOrigin = useRef(autoDetectOrigin);
 
@@ -62,16 +64,17 @@ export function StationSelector({
         }
 
         // Auto-detect is enabled - request geolocation
-        if (hasAutoSelected.current) return;
-        hasAutoSelected.current = true;
+        if (hasAutoSelected.current || isGeolocationPending.current) return;
 
         if (!navigator.geolocation) {
             // Fallback: select first station
             if (stations[0]) setOriginId(stations[0].id);
+            hasAutoSelected.current = true;
             return;
         }
 
         const fallbackToCached = () => {
+            isGeolocationPending.current = false;
             const cachedOriginId = localStorage.getItem(CACHED_ORIGIN_KEY);
             if (
                 cachedOriginId &&
@@ -81,32 +84,47 @@ export function StationSelector({
             } else if (stations[0]) {
                 setOriginId(stations[0].id);
             }
+            hasAutoSelected.current = true;
         };
 
         const requestGeolocation = () => {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const { latitude, longitude } = position.coords;
-                let nearestStation = stations[0];
-                let minDistance = Number.MAX_VALUE;
+            isGeolocationPending.current = true;
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    isGeolocationPending.current = false;
+                    const { latitude, longitude } = position.coords;
+                    let nearestStation = stations[0];
+                    let minDistance = Number.MAX_VALUE;
 
-                stations.forEach((station) => {
-                    if (station.lat && station.lon) {
-                        const distance = Math.sqrt(
-                            Math.pow(station.lat - latitude, 2) +
-                                Math.pow(station.lon - longitude, 2)
-                        );
-                        if (distance < minDistance) {
-                            minDistance = distance;
-                            nearestStation = station;
+                    stations.forEach((station) => {
+                        if (station.lat && station.lon) {
+                            const distance = Math.sqrt(
+                                Math.pow(station.lat - latitude, 2) +
+                                    Math.pow(station.lon - longitude, 2)
+                            );
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                nearestStation = station;
+                            }
                         }
-                    }
-                });
+                    });
 
-                if (nearestStation) {
-                    setOriginId(nearestStation.id);
-                    localStorage.setItem(CACHED_ORIGIN_KEY, nearestStation.id);
+                    if (nearestStation) {
+                        setOriginId(nearestStation.id);
+                        localStorage.setItem(
+                            CACHED_ORIGIN_KEY,
+                            nearestStation.id
+                        );
+                    }
+                    hasAutoSelected.current = true;
+                },
+                fallbackToCached,
+                {
+                    enableHighAccuracy: false,
+                    timeout: 10000,
+                    maximumAge: 300000,
                 }
-            }, fallbackToCached);
+            );
         };
 
         // If user explicitly toggled this on, always try requesting geolocation again.
@@ -193,7 +211,7 @@ export function StationSelector({
                 setIsOpen={handleOriginDropdownOpen}
                 selectedId={originId}
                 onSelect={handleOriginSelect}
-                placeholder={STRINGS.SEARCH_STATION}
+                placeholder={t('app.searchStation')}
                 selectedStation={originStation}
                 onCacheSelection={(id) =>
                     localStorage.setItem(CACHED_ORIGIN_KEY, id)
@@ -214,7 +232,7 @@ export function StationSelector({
                 setIsOpen={handleDestDropdownOpen}
                 selectedId={destId}
                 onSelect={setDestId}
-                placeholder={STRINGS.SEARCH_STATION}
+                placeholder={t('app.searchStation')}
                 selectedStation={destStation}
             />
         </div>

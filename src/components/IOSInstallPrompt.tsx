@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Share } from 'lucide-react';
 
-import { STRINGS } from '../constants';
+import { useI18n } from '../i18n';
 
 import './IOSInstallPrompt.css';
 
@@ -30,6 +30,7 @@ function wasPromptDismissed(): boolean {
 }
 
 export function IOSInstallPrompt() {
+    const { t } = useI18n();
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
@@ -54,11 +55,9 @@ export function IOSInstallPrompt() {
                 className='ios-install-prompt'
                 onClick={(e) => e.stopPropagation()}
             >
-                <h3 className='ios-install-title'>
-                    {STRINGS.IOS_INSTALL_TITLE}
-                </h3>
+                <h3 className='ios-install-title'>{t('iosInstall.title')}</h3>
                 <p className='ios-install-subtitle'>
-                    {STRINGS.IOS_INSTALL_SUBTITLE(STRINGS.APP_TITLE)}
+                    {t('iosInstall.subtitle', { appName: t('app.title') })}
                 </p>
 
                 <div className='ios-install-steps'>
@@ -68,7 +67,7 @@ export function IOSInstallPrompt() {
                         </div>
                         <div className='ios-install-step-text'>
                             <span className='ios-install-step-number'>1</span>
-                            {STRINGS.IOS_INSTALL_STEP_1}
+                            {t('iosInstall.step1')}
                         </div>
                     </div>
 
@@ -78,13 +77,13 @@ export function IOSInstallPrompt() {
                         </div>
                         <div className='ios-install-step-text'>
                             <span className='ios-install-step-number'>2</span>
-                            {STRINGS.IOS_INSTALL_STEP_2}
+                            {t('iosInstall.step2')}
                         </div>
                     </div>
                 </div>
 
                 <button className='ios-install-dismiss' onClick={handleDismiss}>
-                    {STRINGS.IOS_INSTALL_DISMISS}
+                    {t('iosInstall.dismiss')}
                 </button>
             </div>
 

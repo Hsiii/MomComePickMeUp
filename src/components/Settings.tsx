@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MapPin } from 'lucide-react';
 
-import { STRINGS } from '../constants';
+import { useI18n } from '../i18n';
 import type { Station } from '../types';
 import { StationDropdown } from './StationDropdown';
 
@@ -24,6 +24,7 @@ export function Settings({
     setDefaultDestId,
     setDestId,
 }: SettingsProps) {
+    const { t } = useI18n();
     const [destSearch, setDestSearch] = useState('');
     const [destDropdownOpen, setDestDropdownOpen] = useState(false);
 
@@ -38,7 +39,7 @@ export function Settings({
         <div className='settings-section'>
             <div className='settings-item'>
                 <span className='settings-item-label'>
-                    {STRINGS.SETTINGS_AUTO_DETECT_ORIGIN}
+                    {t('settings.autoDetectOrigin')}
                 </span>
                 <div className='settings-switch-row'>
                     <MapPin size={20} className='settings-switch-icon' />
@@ -56,7 +57,7 @@ export function Settings({
 
             <div className='settings-item'>
                 <span className='settings-item-label'>
-                    {STRINGS.SETTINGS_DEFAULT_DESTINATION}
+                    {t('settings.defaultDestination')}
                 </span>
                 <StationDropdown
                     stations={stations}
@@ -66,7 +67,7 @@ export function Settings({
                     setIsOpen={setDestDropdownOpen}
                     selectedId={defaultDestId}
                     onSelect={handleDefaultDestChange}
-                    placeholder={STRINGS.SETTINGS_SELECT_STATION}
+                    placeholder={t('settings.selectStation')}
                     selectedStation={selectedStation}
                 />
             </div>

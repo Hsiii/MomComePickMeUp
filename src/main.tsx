@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 
 import App from './App.tsx';
+import { I18nProvider } from './i18n';
 
 // Hide native splash screen once React is ready
 const nativeSplash = document.getElementById('native-splash');
@@ -14,7 +15,9 @@ if (nativeSplash) {
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-        <App />
+        <I18nProvider>
+            <App />
+        </I18nProvider>
         <Analytics />
     </StrictMode>
 );

@@ -7,7 +7,7 @@ import {
 } from 'react';
 
 import { api } from '../api/client';
-import { STRINGS } from '../constants';
+import { useI18n } from '../i18n';
 import type { TrainInfo } from '../types';
 import { Badge } from './Badge';
 import { TrainListSkeleton } from './TrainListSkeleton';
@@ -39,6 +39,7 @@ export function TrainList({
     onSelect,
     selectedTrainNo,
 }: TrainListProps) {
+    const { t } = useI18n();
     const [trains, setTrains] = useState<TrainInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -109,10 +110,10 @@ export function TrainList({
             })
             .catch((err) => {
                 console.error(err);
-                setError(STRINGS.FAILED_TO_LOAD_SCHEDULE);
+                setError(t('error.failedToLoadSchedule'));
                 setLoading(false);
             });
-    }, [originId, destId, onSelect]);
+    }, [originId, destId, onSelect, t]);
 
     useEffect(() => {
         // Clear any pending debounced fetch
@@ -158,7 +159,7 @@ export function TrainList({
                     onClick={fetchSchedule}
                     className='btn-primary train-list-error-button'
                 >
-                    {STRINGS.RETRY}
+                    {t('common.retry')}
                 </button>
             </div>
         );
@@ -171,7 +172,7 @@ export function TrainList({
     if (!shouldShowLoading && trains.length === 0)
         return (
             <div className='train-list-empty'>
-                {STRINGS.NO_TRAINS_AVAILABLE}
+                {t('train.noTrainsAvailable')}
             </div>
         );
 
@@ -189,7 +190,7 @@ export function TrainList({
 
     return (
         <div>
-            <span className='label-dim'>{STRINGS.SELECT_TRAIN}</span>
+            <span className='label-dim'>{t('app.selectTrain')}</span>
 
             <div className='train-list-container'>
                 {(shouldShowLoading ? [1, 2, 3] : trains).map((train, idx) => {
@@ -242,7 +243,7 @@ export function TrainList({
                                             variant='success'
                                             className='train-card-next-badge'
                                         >
-                                            {STRINGS.NEXT_TRAIN}
+                                            {t('train.next')}
                                         </Badge>
                                     )}
                                 </div>
@@ -260,8 +261,10 @@ export function TrainList({
                                     }
                                 >
                                     {trainData.delay && trainData.delay > 0
-                                        ? STRINGS.DELAY_MINUTES(trainData.delay)
-                                        : STRINGS.ON_TIME}
+                                        ? t('train.delayMinutes', {
+                                              minutes: trainData.delay,
+                                          })
+                                        : t('train.onTime')}
                                 </Badge>
                             </div>
                         </div>

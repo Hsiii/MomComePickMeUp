@@ -7,15 +7,17 @@ import { Settings as SettingsIcon, TrainFront } from 'lucide-react';
 import { api } from './api/client';
 import { InitialLoadingScreen } from './components/InitialLoadingScreen';
 import { IOSInstallPrompt } from './components/IOSInstallPrompt';
+import { LanguageDropdown } from './components/LanguageDropdown';
 import { Settings } from './components/Settings';
 import { ShareCard } from './components/ShareCard';
 import { StationSelector } from './components/StationSelector';
 import { TrainList } from './components/TrainList';
-import { STRINGS } from './constants';
 import { usePersistence } from './hooks/usePersistence';
+import { useI18n } from './i18n';
 import type { Station, TrainInfo } from './types';
 
 function App() {
+    const { t } = useI18n();
     const {
         originId,
         setOriginId,
@@ -60,13 +62,14 @@ function App() {
                         size={64}
                         strokeWidth={2}
                     />
-                    <h1 className='app-header-title'>{STRINGS.APP_TITLE}</h1>
+                    <h1 className='app-header-title'>{t('app.title')}</h1>
                 </div>
                 <div className='app-header-actions'>
+                    <LanguageDropdown />
                     <button
                         className={`settings-button ${settingsOpen ? 'active' : ''}`}
                         onClick={() => setSettingsOpen(!settingsOpen)}
-                        aria-label='Settings'
+                        aria-label={t('app.settingsAriaLabel')}
                     >
                         <SettingsIcon size={22} />
                     </button>
@@ -88,7 +91,7 @@ function App() {
                 <main className='app-main'>
                     <div>
                         <span className='label-dim'>
-                            {STRINGS.SELECT_ROUTE}
+                            {t('app.selectRoute')}
                         </span>
                         <StationSelector
                             stations={stations}
@@ -118,7 +121,7 @@ function App() {
 
                     {(!originId || !destId) && (
                         <div className='app-placeholder'>
-                            {STRINGS.SELECT_STATIONS_PROMPT}
+                            {t('app.selectStationsPrompt')}
                         </div>
                     )}
                 </main>
