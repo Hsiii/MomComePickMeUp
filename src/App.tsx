@@ -15,6 +15,10 @@ import { usePersistence } from './hooks/usePersistence';
 import { useI18n } from './i18n';
 import type { Station, TrainInfo } from './types';
 
+function formatEnglishStationName(name?: string) {
+    return name?.replace(/_/g, ' ');
+}
+
 function App() {
     const { t, language } = useI18n();
     const {
@@ -45,8 +49,13 @@ function App() {
 
     const isEn = language === 'en';
     const originName =
-        (isEn ? originStation?.nameEn : originStation?.name) || originId;
-    const destName = (isEn ? destStation?.nameEn : destStation?.name) || destId;
+        (isEn
+            ? formatEnglishStationName(originStation?.nameEn)
+            : originStation?.name) || originId;
+    const destName =
+        (isEn
+            ? formatEnglishStationName(destStation?.nameEn)
+            : destStation?.name) || destId;
 
     // Show loading screen only until stations are loaded
     const isInitialLoading = !stationsLoaded;

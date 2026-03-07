@@ -75,11 +75,53 @@
     min-height: 100vh;
     min-height: 100svh;
     background: var(--color-bg);
-    padding: calc(var(--space-5) + env(safe-area-inset-top)) var(--space-5)
-        var(--space-5);
+    padding: env(safe-area-inset-top) 0 var(--space-5);
     display: flex;
     flex-direction: column;
     gap: 0;
+}
+
+.station-search-app-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    color: var(--color-primary);
+}
+
+.station-search-app-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-lg);
+}
+
+.station-search-app-header-icon {
+    width: 1.5cap;
+    height: 1.5cap;
+    flex: 0 0 1.5cap;
+}
+
+.station-search-app-header-title {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    min-height: 1.5rem;
+}
+
+.station-search-app-header-spacer {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+}
+
+.station-search-content {
+    padding-inline: var(--space-5);
 }
 
 .station-search-header {

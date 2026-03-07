@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Clock3, Search, X } from 'lucide-react';
+import { Clock3, Search, TrainFront, X } from 'lucide-react';
 
 import { useI18n } from '../i18n';
 import type { Station } from '../types';
 import {
     filterStationsBySearch,
+    normalizeEnglishStationName,
     normalizeSearchValue,
     resolvePreferredStationId,
 } from './stationSearchUtils';
@@ -69,6 +70,9 @@ export function StationDropdown({
     const { t, language } = useI18n();
     const inputRef = useRef<HTMLInputElement>(null);
 
+    const getDisplayStationName = (station: Station) =>
+        language === 'en' ? station.nameEn.replace(/_/g, ' ') : station.name;
+
     const focusSearchInput = () => {
         window.requestAnimationFrame(() => {
             inputRef.current?.focus();
@@ -122,7 +126,8 @@ export function StationDropdown({
         if (!searchValue.trim()) return [];
 
         const normalizedSearchValue = normalizeSearchValue(searchValue);
-        const lowerCaseSearchValue = searchValue.toLowerCase();
+        const normalizedEnglishSearchValue =
+            normalizeEnglishStationName(searchValue);
 
         return filterStationsBySearch(stations, searchValue)
             .map((station, index) => {
@@ -133,7 +138,8 @@ export function StationDropdown({
                 } else if (
                     station.name === searchValue ||
                     station.name === normalizedSearchValue ||
-                    station.nameEn.toLowerCase() === lowerCaseSearchValue
+                    normalizeEnglishStationName(station.nameEn) ===
+                        normalizedEnglishSearchValue
                 ) {
                     priority = 1;
                 }
@@ -163,7 +169,13 @@ export function StationDropdown({
     };
 
     const handleOpen = () => {
-        setSearchValue(selectedStation?.name ?? '');
+        setSearchValue(
+            selectedStation
+                ? language === 'en'
+                    ? getDisplayStationName(selectedStation)
+                    : selectedStation.name
+                : ''
+        );
         setIsOpen(true);
     };
 
@@ -185,9 +197,7 @@ export function StationDropdown({
                 <span className='station-trigger-label'>{placeholder}</span>
                 <span className='station-trigger-value'>
                     {selectedStation
-                        ? language === 'en'
-                            ? selectedStation.nameEn
-                            : selectedStation.name
+                        ? getDisplayStationName(selectedStation)
                         : ''}
                 </span>
             </button>
@@ -195,93 +205,116 @@ export function StationDropdown({
             {isOpen && (
                 <div className='station-search-overlay'>
                     <div className='station-search-page'>
-                        <div className='station-search-header'>
-                            <h2 className='station-search-title'>{title}</h2>
-                            <button
-                                type='button'
-                                className='station-search-close'
-                                onClick={handleDismiss}
-                                aria-label={t('common.close')}
-                            >
-                                <X />
-                            </button>
-                        </div>
+                        <header className='station-search-app-header'>
+                            <div className='station-search-app-header-left'>
+                                <TrainFront
+                                    className='station-search-app-header-icon'
+                                    strokeWidth={2}
+                                    aria-hidden='true'
+                                />
+                                <h1 className='station-search-app-header-title'>
+                                    {t('app.title')}
+                                </h1>
+                            </div>
+                            <div
+                                className='station-search-app-header-spacer'
+                                aria-hidden='true'
+                            />
+                        </header>
 
-                        <div className='station-search-panel'>
-                            <div className='station-search-input-shell'>
-                                <Search className='station-search-leading-icon' />
-                                <div
-                                    className={`station-search-input-copy ${searchValue ? 'has-value' : ''}`}
-                                    onMouseDown={focusSearchInput}
+                        <div className='station-search-content'>
+                            <div className='station-search-header'>
+                                <h2 className='station-search-title'>
+                                    {title}
+                                </h2>
+                                <button
+                                    type='button'
+                                    className='station-search-close'
+                                    onClick={handleDismiss}
+                                    aria-label={t('common.close')}
                                 >
-                                    <span className='station-search-input-label'>
-                                        {placeholder}
-                                    </span>
-                                    <input
-                                        ref={inputRef}
-                                        type='text'
-                                        className='station-search-input'
-                                        value={searchValue}
-                                        placeholder={placeholder}
-                                        onChange={(event) =>
-                                            handleInputChange(
-                                                event.target.value
-                                            )
-                                        }
-                                    />
-                                </div>
-
-                                {searchValue && (
-                                    <button
-                                        type='button'
-                                        className='station-search-clear'
-                                        onClick={() => setSearchValue('')}
-                                        aria-label={t('common.clear')}
-                                    >
-                                        <X />
-                                    </button>
-                                )}
+                                    <X />
+                                </button>
                             </div>
 
-                            <div className='station-search-results'>
-                                {visibleStations.length > 0 ? (
-                                    <div className='station-search-list'>
-                                        {visibleStations.map((station) => {
-                                            const isRecent =
-                                                !searchValue.trim();
+                            <div className='station-search-panel'>
+                                <div className='station-search-input-shell'>
+                                    <Search className='station-search-leading-icon' />
+                                    <div
+                                        className={`station-search-input-copy ${searchValue ? 'has-value' : ''}`}
+                                        onMouseDown={focusSearchInput}
+                                    >
+                                        <span className='station-search-input-label'>
+                                            {placeholder}
+                                        </span>
+                                        <input
+                                            ref={inputRef}
+                                            type='text'
+                                            className='station-search-input'
+                                            value={searchValue}
+                                            placeholder={placeholder}
+                                            onChange={(event) =>
+                                                handleInputChange(
+                                                    event.target.value
+                                                )
+                                            }
+                                        />
+                                    </div>
 
-                                            return (
-                                                <button
-                                                    key={station.id}
-                                                    type='button'
-                                                    className={`station-search-item ${station.id === selectedId ? 'selected' : ''}`}
-                                                    onClick={() =>
-                                                        handleSelect(station.id)
-                                                    }
-                                                >
-                                                    <span className='station-search-item-icon'>
-                                                        {isRecent ? (
-                                                            <Clock3 />
-                                                        ) : (
-                                                            <Search />
-                                                        )}
-                                                    </span>
-                                                    <span className='station-search-item-text'>
-                                                        {language === 'en'
-                                                            ? station.nameEn
-                                                            : station.name}
-                                                    </span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className='station-search-empty'>
-                                        {searchValue.trim()
-                                            ? t('station.noMatches')
-                                            : t('station.noRecentSearches')}
-                                    </div>
-                                )}
+                                    {searchValue && (
+                                        <button
+                                            type='button'
+                                            className='station-search-clear'
+                                            onClick={() => setSearchValue('')}
+                                            aria-label={t('common.clear')}
+                                        >
+                                            <X />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className='station-search-results'>
+                                    {visibleStations.length > 0 ? (
+                                        <div className='station-search-list'>
+                                            {visibleStations.map((station) => {
+                                                const isRecent =
+                                                    !searchValue.trim();
+
+                                                return (
+                                                    <button
+                                                        key={station.id}
+                                                        type='button'
+                                                        className={`station-search-item ${station.id === selectedId ? 'selected' : ''}`}
+                                                        onClick={() =>
+                                                            handleSelect(
+                                                                station.id
+                                                            )
+                                                        }
+                                                    >
+                                                        <span className='station-search-item-icon'>
+                                                            {isRecent ? (
+                                                                <Clock3 />
+                                                            ) : (
+                                                                <Search />
+                                                            )}
+                                                        </span>
+                                                        <span className='station-search-item-text'>
+                                                            {getDisplayStationName(
+                                                                station
+                                                            )}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className='station-search-empty'>
+                                            {searchValue.trim()
+                                                ? t('station.noMatches')
+                                                : t('station.noRecentSearches')}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

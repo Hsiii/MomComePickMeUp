@@ -9,6 +9,10 @@ export function normalizeSearchValue(value: string): string {
     return value.replace(/台/g, '臺').trim();
 }
 
+export function normalizeEnglishStationName(value: string): string {
+    return value.replace(/_/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
 export function isExplicitCircularSearch(value: string): boolean {
     return CIRCULAR_SEARCH_PATTERN.test(normalizeSearchValue(value));
 }
@@ -49,13 +53,15 @@ export function filterStationsBySearch(
 ): Station[] {
     const normalizedSearch = normalizeSearchValue(searchValue);
     const explicitCircularSearch = isExplicitCircularSearch(searchValue);
-    const lowerCaseSearch = searchValue.toLowerCase();
+    const normalizedEnglishSearch = normalizeEnglishStationName(searchValue);
 
     return stations.filter((station) => {
         const matchesSearch =
             station.name.includes(searchValue) ||
             station.name.includes(normalizedSearch) ||
-            station.nameEn.toLowerCase().includes(lowerCaseSearch);
+            normalizeEnglishStationName(station.nameEn).includes(
+                normalizedEnglishSearch
+            );
 
         if (!matchesSearch) return false;
         if (explicitCircularSearch) return true;
