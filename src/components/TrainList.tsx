@@ -229,15 +229,23 @@ export function TrainList({
                                 key={idx}
                                 className='card-panel train-card skeleton-card'
                             >
-                                <div className='train-card-left'>
-                                    <div className='train-card-time-row'>
+                                <div className='train-card-times'>
+                                    <span className='train-card-time-cell skeleton-time-cell'>
                                         <span className='skeleton skeleton-time'></span>
-                                        <span className='train-card-arrow skeleton-arrow'>
-                                            ➔
-                                        </span>
-                                        <span className='skeleton skeleton-time'></span>
+                                    </span>
+                                    <div className='train-card-separator'>
+                                        <span className='train-card-line skeleton-line'></span>
+                                        <span className='skeleton skeleton-trip-time'></span>
+                                        <span className='train-card-line skeleton-line'></span>
                                     </div>
-                                    <div className='skeleton skeleton-details'></div>
+                                    <span className='train-card-time-cell skeleton-time-cell'>
+                                        <span className='skeleton skeleton-time'></span>
+                                    </span>
+                                </div>
+                                <div className='train-card-info'>
+                                    <span className='skeleton skeleton-type'></span>
+                                    <span className='skeleton skeleton-number'></span>
+                                    <span className='skeleton skeleton-dot'></span>
                                 </div>
                             </div>
                         );

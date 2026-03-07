@@ -36,7 +36,10 @@
 
 .train-card.selected {
     background: rgba(56, 189, 248, 0.06);
-    border-color: rgba(56, 189, 248, 0.2);
+    border-color: rgba(56, 189, 248, 0.72);
+    box-shadow:
+        inset 0 0 0 1px rgba(56, 189, 248, 0.28),
+        0 0 0 1px rgba(56, 189, 248, 0.12);
 }
 
 .train-card.skeleton-card {

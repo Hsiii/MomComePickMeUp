@@ -162,11 +162,11 @@
     padding: 0;
 }
 
-.station-search-close svg,
-.station-search-clear svg {
-    width: 20px;
-    height: 20px;
-    flex: 0 0 20px;
+.station-search-close {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 50%;
 }
 
 .station-search-panel {

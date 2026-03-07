@@ -219,10 +219,15 @@ export function StationDropdown({
                                     {t('app.title')}
                                 </h1>
                             </div>
-                            <div
-                                className='station-search-app-header-spacer'
-                                aria-hidden='true'
-                            />
+                            <button
+                                type='button'
+                                className='station-search-close'
+                                onClick={handleDismiss}
+                                aria-label={t('common.close')}
+                                title={t('common.close')}
+                            >
+                                <X aria-hidden='true' />
+                            </button>
                         </header>
 
                         <div className='station-search-content'>
@@ -302,13 +307,11 @@ export function StationDropdown({
                                                 );
                                             })}
                                         </div>
-                                    ) : (
+                                    ) : searchValue.trim() ? (
                                         <div className='station-search-empty'>
-                                            {searchValue.trim()
-                                                ? t('station.noMatches')
-                                                : t('station.noRecentSearches')}
+                                            {t('station.noMatches')}
                                         </div>
-                                    )}
+                                    ) : null}
                                 </div>
                             </div>
                         </div>

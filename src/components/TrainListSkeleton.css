@@ -1,9 +1,9 @@
 .skeleton {
     background: linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.05) 0%,
-        rgba(255, 255, 255, 0.1) 50%,
-        rgba(255, 255, 255, 0.05) 100%
+        105deg,
+        rgba(148, 163, 184, 0.08) 0%,
+        rgba(148, 163, 184, 0.18) 45%,
+        rgba(148, 163, 184, 0.08) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
@@ -22,31 +22,52 @@
 
 .skeleton-card {
     pointer-events: none;
-    opacity: 0.7;
+    opacity: 0.9;
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.03),
+        var(--shadow-lg);
 }
 
-.skeleton-label {
-    width: 80px;
-    height: 16px;
-    margin-bottom: var(--space-2);
+.skeleton-card .train-card-times {
+    flex: 1;
+}
+
+.skeleton-time-cell {
+    min-height: 1.5rem;
+    justify-content: center;
 }
 
 .skeleton-time {
-    width: 50px;
-    height: 24px;
+    width: 3.2rem;
+    height: 1rem;
+    border-radius: 999px;
 }
 
-.skeleton-arrow {
-    opacity: 0.3;
+.skeleton-line {
+    opacity: 0.7;
 }
 
-.skeleton-details {
-    width: 120px;
-    height: 16px;
-    margin-top: var(--space-1);
+.skeleton-trip-time {
+    width: 2.4rem;
+    height: 0.7rem;
+    border-radius: 999px;
 }
 
-.skeleton-badge {
-    width: 70px;
-    height: 24px;
+.skeleton-type {
+    width: 3.5rem;
+    height: 0.875rem;
+    border-radius: 999px;
+}
+
+.skeleton-number {
+    width: 2rem;
+    height: 0.75rem;
+    border-radius: 999px;
+}
+
+.skeleton-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
 }
