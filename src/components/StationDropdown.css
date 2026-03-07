@@ -269,8 +269,8 @@
     min-height: 0;
     max-height: 50vh;
     max-height: 50svh;
-    background: transparent;
     overflow: hidden;
+    background: transparent;
 }
 
 .station-search-list {
@@ -311,4 +311,10 @@
     background: transparent;
     color: var(--color-text-dim);
     font-size: var(--text-base);
+}
+
+@media (max-width: 640px), (max-height: 760px) {
+    .station-search-results {
+        max-height: calc(4rem * 2.5);
+    }
 }
