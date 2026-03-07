@@ -16,7 +16,7 @@
 }
 
 .language-dropdown-trigger:hover {
-    color: var(--color-text);
+    color: var(--color-text-dim);
 }
 
 .language-dropdown-trigger:focus-visible {
@@ -144,6 +144,6 @@
 /* ── Checkmark ── */
 
 .lang-option-check {
-    color: var(--color-text);
+    color: var(--color-text-dim);
     flex-shrink: 0;
 }

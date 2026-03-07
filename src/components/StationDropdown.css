@@ -114,6 +114,10 @@
     font-size: var(--text-lg);
 }
 
+.station-search-app-header-icon {
+    color: var(--color-primary);
+}
+
 .station-search-app-header-title {
     margin: 0;
     font-family: var(--font-sans);
