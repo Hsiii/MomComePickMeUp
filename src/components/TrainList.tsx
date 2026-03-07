@@ -310,9 +310,6 @@ export function TrainList({
                                 </span>
                             </div>
                             <div className='train-card-info'>
-                                <span
-                                    className={`train-card-dot ${isDelayed ? 'delayed' : 'on-time'}`}
-                                />
                                 <span className='train-card-type'>
                                     {parseTrainType(
                                         trainData.trainType,
@@ -322,6 +319,9 @@ export function TrainList({
                                 <span className='train-card-number'>
                                     {trainData.trainNo}
                                 </span>
+                                <span
+                                    className={`train-card-dot ${isDelayed ? 'delayed' : 'on-time'}`}
+                                />
                             </div>
                         </div>
                     );
