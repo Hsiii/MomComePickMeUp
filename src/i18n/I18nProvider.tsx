@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { I18nContext } from './context';
 import {
     FALLBACK_LANGUAGE,
-    LANGUAGE_OPTIONS,
     STORAGE_LANGUAGE_KEY,
     translations,
     type TranslationKey,
@@ -19,26 +18,39 @@ function formatMessage(template: string, params?: TranslationParams): string {
     });
 }
 
-function getStoredLanguage(): LanguageCode {
-    const value = localStorage.getItem(STORAGE_LANGUAGE_KEY);
-    const isSupported = LANGUAGE_OPTIONS.some(
-        (option) => option.code === value
-    );
-    return isSupported ? (value as LanguageCode) : FALLBACK_LANGUAGE;
+function detectLanguage(): LanguageCode {
+    const candidates = navigator.languages?.length
+        ? navigator.languages
+        : [navigator.language];
+    const normalized = candidates.map((v) => v.toLowerCase());
+
+    if (normalized.some((v) => v === 'zh-tw' || v.startsWith('zh'))) {
+        return 'zh-TW';
+    }
+    return 'en';
+}
+
+function getInitialLanguage(): LanguageCode {
+    const stored = localStorage.getItem(STORAGE_LANGUAGE_KEY);
+    if (stored === 'zh-TW' || stored === 'en') return stored;
+
+    // First launch — detect from browser/device and persist
+    const detected = detectLanguage();
+    localStorage.setItem(STORAGE_LANGUAGE_KEY, detected);
+    return detected;
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-    const [language, setLanguageState] = useState<LanguageCode>(() =>
-        getStoredLanguage()
-    );
+    const [language, setLanguageState] =
+        useState<LanguageCode>(getInitialLanguage);
 
     useEffect(() => {
         document.documentElement.lang = language;
     }, [language]);
 
-    const setLanguage = (nextLanguage: LanguageCode) => {
-        setLanguageState(nextLanguage);
-        localStorage.setItem(STORAGE_LANGUAGE_KEY, nextLanguage);
+    const setLanguage = (next: LanguageCode) => {
+        setLanguageState(next);
+        localStorage.setItem(STORAGE_LANGUAGE_KEY, next);
     };
 
     const value = useMemo(() => {

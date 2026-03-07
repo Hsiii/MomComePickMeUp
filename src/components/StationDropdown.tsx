@@ -66,7 +66,7 @@ export function StationDropdown({
     selectedStation,
     onCacheSelection,
 }: StationDropdownProps) {
-    const { t } = useI18n();
+    const { t, language } = useI18n();
     const inputRef = useRef<HTMLInputElement>(null);
 
     const focusSearchInput = () => {
@@ -184,7 +184,11 @@ export function StationDropdown({
             >
                 <span className='station-trigger-label'>{placeholder}</span>
                 <span className='station-trigger-value'>
-                    {selectedStation?.name ?? ''}
+                    {selectedStation
+                        ? language === 'en'
+                            ? selectedStation.nameEn
+                            : selectedStation.name
+                        : ''}
                 </span>
             </button>
 
@@ -199,16 +203,13 @@ export function StationDropdown({
                                 onClick={handleDismiss}
                                 aria-label={t('common.close')}
                             >
-                                <X size={30} />
+                                <X />
                             </button>
                         </div>
 
                         <div className='station-search-panel'>
                             <div className='station-search-input-shell'>
-                                <Search
-                                    size={20}
-                                    className='station-search-leading-icon'
-                                />
+                                <Search className='station-search-leading-icon' />
                                 <div
                                     className={`station-search-input-copy ${searchValue ? 'has-value' : ''}`}
                                     onMouseDown={focusSearchInput}
@@ -237,7 +238,7 @@ export function StationDropdown({
                                         onClick={() => setSearchValue('')}
                                         aria-label={t('common.clear')}
                                     >
-                                        <X size={18} />
+                                        <X />
                                     </button>
                                 )}
                             </div>
@@ -260,13 +261,15 @@ export function StationDropdown({
                                                 >
                                                     <span className='station-search-item-icon'>
                                                         {isRecent ? (
-                                                            <Clock3 size={20} />
+                                                            <Clock3 />
                                                         ) : (
-                                                            <Search size={20} />
+                                                            <Search />
                                                         )}
                                                     </span>
                                                     <span className='station-search-item-text'>
-                                                        {station.name}
+                                                        {language === 'en'
+                                                            ? station.nameEn
+                                                            : station.name}
                                                     </span>
                                                 </button>
                                             );

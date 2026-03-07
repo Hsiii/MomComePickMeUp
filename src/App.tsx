@@ -16,7 +16,7 @@ import { useI18n } from './i18n';
 import type { Station, TrainInfo } from './types';
 
 function App() {
-    const { t } = useI18n();
+    const { t, language } = useI18n();
     const {
         originId,
         setOriginId,
@@ -43,8 +43,10 @@ function App() {
     const originStation = stations.find((s) => s.id === originId);
     const destStation = stations.find((s) => s.id === destId);
 
-    const originName = originStation?.name || originId;
-    const destName = destStation?.name || destId;
+    const isEn = language === 'en';
+    const originName =
+        (isEn ? originStation?.nameEn : originStation?.name) || originId;
+    const destName = (isEn ? destStation?.nameEn : destStation?.name) || destId;
 
     // Show loading screen only until stations are loaded
     const isInitialLoading = !stationsLoaded;
@@ -55,11 +57,7 @@ function App() {
             <IOSInstallPrompt />
             <header className='app-header'>
                 <div className='app-header-left'>
-                    <TrainFront
-                        className='app-header-icon'
-                        size={64}
-                        strokeWidth={2}
-                    />
+                    <TrainFront className='app-header-icon' strokeWidth={2} />
                     <h1 className='app-header-title'>{t('app.title')}</h1>
                 </div>
                 <div className='app-header-actions'>

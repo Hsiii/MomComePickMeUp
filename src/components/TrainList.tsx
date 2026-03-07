@@ -14,15 +14,31 @@ import { TrainListSkeleton } from './TrainListSkeleton';
 import './TrainList.css';
 
 /**
- * Parse train type to extract simple term
- * Examples:
- * - "自強(商務專開列車)" → "自強"
- * - "區間" → "區間"
- * - "莒光(跨線列車)" → "莒光"
+ * Chinese → English abbreviated train type mapping.
+ * Based on official Taiwan Railway service classes.
  */
-function parseTrainType(trainType: string): string {
+const TRAIN_TYPE_EN: Record<string, string> = {
+    自強: 'TC', // Tze-Chiang
+    莒光: 'CK', // Chu-Kuang
+    區間: 'Local',
+    區間快: 'F.Local', // Fast Local
+    太魯閣: 'Taroko',
+    普悠瑪: 'Puyuma',
+    新自強: 'N.TC', // New Tze-Chiang (EMU3000)
+};
+
+/**
+ * Parse train type to extract simple term, with optional English mapping.
+ * Examples (zh-TW): "自強(商務專開列車)" → "自強"
+ * Examples (en):    "自強(商務專開列車)" → "TC"
+ */
+function parseTrainType(trainType: string, lang?: string): string {
     // Remove content in parentheses and any suffix like "號"
-    return trainType.split('(')[0].replace(/號$/, '');
+    const base = trainType.split('(')[0].replace(/號$/, '');
+    if (lang === 'en') {
+        return TRAIN_TYPE_EN[base] ?? base;
+    }
+    return base;
 }
 
 /** Add minutes to a HH:mm time string */
@@ -63,7 +79,7 @@ export function TrainList({
     onSelect,
     selectedTrainNo,
 }: TrainListProps) {
-    const { t } = useI18n();
+    const { t, language } = useI18n();
     const [trains, setTrains] = useState<TrainInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -298,7 +314,10 @@ export function TrainList({
                                     className={`train-card-dot ${isDelayed ? 'delayed' : 'on-time'}`}
                                 />
                                 <span className='train-card-type'>
-                                    {parseTrainType(trainData.trainType)}
+                                    {parseTrainType(
+                                        trainData.trainType,
+                                        language
+                                    )}
                                 </span>
                                 <span className='train-card-number'>
                                     {trainData.trainNo}

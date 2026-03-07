@@ -47,7 +47,8 @@
 }
 
 .share-card-part {
-    display: inline-block;
+    display: inline;
+    white-space: pre;
 }
 
 .share-card-part-autospace {
