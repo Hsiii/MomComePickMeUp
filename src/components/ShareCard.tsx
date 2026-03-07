@@ -13,6 +13,46 @@ interface ShareCardProps {
     destName: string;
 }
 
+type OverlayPart = {
+    text: string;
+    type: 'text' | 'time' | 'station';
+    needsLeadingGap?: boolean;
+};
+
+const LATIN_OR_NUMERIC_CHAR_REGEX = /[\p{Script=Latin}\p{Number}]/u;
+const CJK_CHAR_REGEX =
+    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
+
+function needsAutospaceBetween(leftChar: string, rightChar: string) {
+    if (!leftChar || !rightChar) return false;
+
+    const leftIsLatinOrNumeric = LATIN_OR_NUMERIC_CHAR_REGEX.test(leftChar);
+    const rightIsLatinOrNumeric = LATIN_OR_NUMERIC_CHAR_REGEX.test(rightChar);
+    const leftIsCjk = CJK_CHAR_REGEX.test(leftChar);
+    const rightIsCjk = CJK_CHAR_REGEX.test(rightChar);
+
+    return (
+        (leftIsLatinOrNumeric && rightIsCjk) ||
+        (leftIsCjk && rightIsLatinOrNumeric)
+    );
+}
+
+function shouldApplyOverlayAutospace() {
+    if (typeof navigator === 'undefined') return false;
+
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform;
+    const maxTouchPoints = navigator.maxTouchPoints ?? 0;
+    const isAppleMobileDevice =
+        /iPhone|iPad|iPod/.test(userAgent) ||
+        (platform === 'MacIntel' && maxTouchPoints > 1);
+    const isWebKitBrowser =
+        /AppleWebKit/i.test(userAgent) &&
+        !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(userAgent);
+
+    return isAppleMobileDevice && isWebKitBrowser;
+}
+
 export function ShareCard({ train, destName }: ShareCardProps) {
     const { t } = useI18n();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +78,10 @@ export function ShareCard({ train, destName }: ShareCardProps) {
               station: destName,
           })
         : t('share.noTrainMessage');
+    const shouldMirrorAutospace = useMemo(
+        () => shouldApplyOverlayAutospace(),
+        []
+    );
 
     const prevTimeRef = useRef(adjustedTime);
     const prevStationRef = useRef(destName);
@@ -47,8 +91,7 @@ export function ShareCard({ train, destName }: ShareCardProps) {
     // Split default message into typed parts for overlay rendering
     const overlayParts = useMemo(() => {
         if (!train) return null;
-        type Part = { text: string; type: 'text' | 'time' | 'station' };
-        const parts: Part[] = [];
+        const parts: OverlayPart[] = [];
         const markers: {
             idx: number;
             len: number;
@@ -80,8 +123,22 @@ export function ShareCard({ train, destName }: ShareCardProps) {
         }
         if (pos < defaultMessage.length)
             parts.push({ text: defaultMessage.slice(pos), type: 'text' });
-        return parts;
-    }, [train, defaultMessage, adjustedTime, destName]);
+
+        return parts.map((part, index) => {
+            if (index === 0) return part;
+
+            const previousPart = parts[index - 1];
+            const previousChar = previousPart.text.at(-1) ?? '';
+            const currentChar = part.text[0] ?? '';
+
+            return {
+                ...part,
+                needsLeadingGap:
+                    shouldMirrorAutospace &&
+                    needsAutospaceBetween(previousChar, currentChar),
+            };
+        });
+    }, [train, defaultMessage, adjustedTime, destName, shouldMirrorAutospace]);
 
     // Reset message and trigger per-part flash when data changes
     useEffect(() => {
@@ -165,7 +222,7 @@ export function ShareCard({ train, destName }: ShareCardProps) {
                         {overlayParts.map((part, i) => (
                             <span
                                 key={i}
-                                className={`share-card-part share-card-part-${part.type}`}
+                                className={`share-card-part share-card-part-${part.type}${part.needsLeadingGap ? ' share-card-part-autospace' : ''}`}
                                 ref={
                                     part.type === 'time'
                                         ? timePartRef

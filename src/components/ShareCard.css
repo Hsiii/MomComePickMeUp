@@ -50,6 +50,10 @@
     display: inline-block;
 }
 
+.share-card-part-autospace {
+    margin-inline-start: 0.25em;
+}
+
 .share-card-overlay span {
     transition: color 0.4s ease;
 }
