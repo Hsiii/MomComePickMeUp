@@ -1,10 +1,4 @@
-import {
-    startTransition,
-    useCallback,
-    useEffect,
-    useRef,
-    useState,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { api } from '../api/client';
 import { useI18n } from '../i18n';
@@ -92,13 +86,9 @@ export function TrainList({
     const [trains, setTrains] = useState<TrainInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [hasData, setHasData] = useState(false);
     const lastFetchTimeRef = useRef<number | null>(null);
-    const fetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-        undefined
-    );
     const lastFetchParamsRef = useRef<string>('');
-    const isFirstMountRef = useRef(true);
+    const requestIdRef = useRef(0);
 
     const fetchSchedule = useCallback(() => {
         if (!originId || !destId) return;
@@ -114,12 +104,19 @@ export function TrainList({
             return;
         }
 
+        const requestId = requestIdRef.current + 1;
+        requestIdRef.current = requestId;
         lastFetchParamsRef.current = currentParams;
         setLoading(true);
         setError(null);
+        setTrains([]);
 
         api.getSchedule(originId, destId)
             .then((res) => {
+                if (requestId !== requestIdRef.current) {
+                    return;
+                }
+
                 const now = new Date();
                 const currentTimeStr = now.toLocaleTimeString('en-CA', {
                     hour12: false,
@@ -159,13 +156,16 @@ export function TrainList({
                 setTrains(displayTrains);
                 setLoading(false);
                 lastFetchTimeRef.current = Date.now();
-                setHasData(true);
 
                 if (recommendedTrain) {
                     onSelect(recommendedTrain);
                 }
             })
             .catch((err) => {
+                if (requestId !== requestIdRef.current) {
+                    return;
+                }
+
                 console.error(err);
                 setError(t('error.failedToLoadSchedule'));
                 setLoading(false);
@@ -173,185 +173,131 @@ export function TrainList({
     }, [originId, destId, onSelect, t]);
 
     useEffect(() => {
-        // Clear any pending debounced fetch
-        if (fetchTimeoutRef.current) {
-            clearTimeout(fetchTimeoutRef.current);
-        }
-
-        // Debounce initial fetch (500ms) to allow rapid selection changes
-        // Skip debounce on first mount to avoid initial delay
-        const delay = isFirstMountRef.current ? 0 : 500;
-        isFirstMountRef.current = false;
-
-        fetchTimeoutRef.current = setTimeout(() => {
-            startTransition(() => {
-                fetchSchedule();
-            });
-        }, delay);
+        const initialFetchTimer = window.setTimeout(() => {
+            fetchSchedule();
+        }, 0);
 
         // Poll every minute
         const interval = setInterval(() => {
-            startTransition(() => {
-                fetchSchedule();
-            });
+            fetchSchedule();
         }, 60000);
 
         return () => {
+            window.clearTimeout(initialFetchTimer);
             clearInterval(interval);
-            if (fetchTimeoutRef.current) {
-                clearTimeout(fetchTimeoutRef.current);
-            }
         };
     }, [fetchSchedule]);
 
     if (!originId || !destId) return null;
-    // Show loading only if we don't have any data yet
-    const shouldShowLoading = loading && !hasData;
-
-    if (error)
-        return (
-            <div className='card-panel train-list-error'>
-                <div className='train-list-error-message'>{error}</div>
-                <button
-                    onClick={fetchSchedule}
-                    className='btn-primary train-list-error-button'
-                >
-                    {t('common.retry')}
-                </button>
-            </div>
-        );
-
-    // Show skeleton if loading and no data yet
-    if (shouldShowLoading && trains.length === 0) {
-        return <TrainListSkeleton />;
-    }
-
-    if (!shouldShowLoading && trains.length === 0)
-        return (
-            <div className='train-list-empty'>
-                {t('train.noTrainsAvailable')}
-            </div>
-        );
 
     return (
         <div>
             <span className='label-dim'>{t('app.selectTrain')}</span>
 
-            <div className='train-list-container'>
-                {(shouldShowLoading ? [1, 2, 3] : trains).map((train, idx) => {
-                    if (shouldShowLoading) {
-                        // Render skeleton cards
+            {error ? (
+                <div className='card-panel train-list-error'>
+                    <div className='train-list-error-message'>{error}</div>
+                    <button
+                        onClick={fetchSchedule}
+                        className='btn-primary train-list-error-button'
+                    >
+                        {t('common.retry')}
+                    </button>
+                </div>
+            ) : loading ? (
+                <TrainListSkeleton showLabel={false} />
+            ) : trains.length === 0 ? (
+                <div className='train-list-empty'>
+                    {t('train.noTrainsAvailable')}
+                </div>
+            ) : (
+                <div className='train-list-container'>
+                    {trains.map((train) => {
+                        const trainData = train as TrainInfo;
+                        const isSelected =
+                            trainData.trainNo === selectedTrainNo;
+                        const isDelayed = (trainData.delay ?? 0) > 0;
+                        const tripMin = getTripMinutes(
+                            trainData.departureTime,
+                            trainData.arrivalTime
+                        );
+
                         return (
                             <div
-                                key={idx}
-                                className='card-panel train-card skeleton-card'
+                                key={trainData.trainNo}
+                                className={`card-panel clickable-item train-card ${isSelected ? 'selected' : ''}`}
+                                onClick={() => onSelect(trainData)}
                             >
                                 <div className='train-card-times'>
-                                    <span className='train-card-time-cell skeleton-time-cell'>
-                                        <span className='skeleton skeleton-time'></span>
+                                    <span
+                                        className={`train-card-time-cell ${isDelayed ? 'delayed' : ''}`}
+                                    >
+                                        {isDelayed && (
+                                            <span className='train-card-delayed-time'>
+                                                {addMinutes(
+                                                    trainData.departureTime,
+                                                    trainData.delay!
+                                                )}
+                                            </span>
+                                        )}
+                                        <span
+                                            className={
+                                                isDelayed
+                                                    ? 'train-card-original-time'
+                                                    : 'train-card-departure-time'
+                                            }
+                                        >
+                                            {trainData.departureTime}
+                                        </span>
                                     </span>
                                     <div className='train-card-separator'>
-                                        <span className='train-card-line skeleton-line'></span>
-                                        <span className='skeleton skeleton-trip-time'></span>
-                                        <span className='train-card-line skeleton-line'></span>
+                                        <span className='train-card-line' />
+                                        <span className='train-card-trip-time'>
+                                            {formatDuration(tripMin)}
+                                        </span>
+                                        <span className='train-card-line' />
                                     </div>
-                                    <span className='train-card-time-cell skeleton-time-cell'>
-                                        <span className='skeleton skeleton-time'></span>
+                                    <span
+                                        className={`train-card-time-cell ${isDelayed ? 'delayed' : ''}`}
+                                    >
+                                        {isDelayed && (
+                                            <span className='train-card-delayed-time'>
+                                                {addMinutes(
+                                                    trainData.arrivalTime,
+                                                    trainData.delay!
+                                                )}
+                                            </span>
+                                        )}
+                                        <span
+                                            className={
+                                                isDelayed
+                                                    ? 'train-card-original-time'
+                                                    : 'train-card-arrival-time'
+                                            }
+                                        >
+                                            {trainData.arrivalTime}
+                                        </span>
                                     </span>
                                 </div>
                                 <div className='train-card-info'>
-                                    <span className='skeleton skeleton-type'></span>
-                                    <span className='skeleton skeleton-number'></span>
-                                    <span className='skeleton skeleton-dot'></span>
+                                    <span className='train-card-type'>
+                                        {parseTrainType(
+                                            trainData.trainType,
+                                            language
+                                        )}
+                                    </span>
+                                    <span className='train-card-number'>
+                                        {trainData.trainNo}
+                                    </span>
+                                    <span
+                                        className={`train-card-dot ${isDelayed ? 'delayed' : 'on-time'}`}
+                                    />
                                 </div>
                             </div>
                         );
-                    }
-
-                    // Render actual train data
-                    const trainData = train as TrainInfo;
-                    const isSelected = trainData.trainNo === selectedTrainNo;
-                    const isDelayed = (trainData.delay ?? 0) > 0;
-                    const tripMin = getTripMinutes(
-                        trainData.departureTime,
-                        trainData.arrivalTime
-                    );
-
-                    return (
-                        <div
-                            key={trainData.trainNo}
-                            className={`card-panel clickable-item train-card ${isSelected ? 'selected' : ''}`}
-                            onClick={() => onSelect(trainData)}
-                        >
-                            <div className='train-card-times'>
-                                <span
-                                    className={`train-card-time-cell ${isDelayed ? 'delayed' : ''}`}
-                                >
-                                    {isDelayed && (
-                                        <span className='train-card-delayed-time'>
-                                            {addMinutes(
-                                                trainData.departureTime,
-                                                trainData.delay!
-                                            )}
-                                        </span>
-                                    )}
-                                    <span
-                                        className={
-                                            isDelayed
-                                                ? 'train-card-original-time'
-                                                : 'train-card-departure-time'
-                                        }
-                                    >
-                                        {trainData.departureTime}
-                                    </span>
-                                </span>
-                                <div className='train-card-separator'>
-                                    <span className='train-card-line' />
-                                    <span className='train-card-trip-time'>
-                                        {formatDuration(tripMin)}
-                                    </span>
-                                    <span className='train-card-line' />
-                                </div>
-                                <span
-                                    className={`train-card-time-cell ${isDelayed ? 'delayed' : ''}`}
-                                >
-                                    {isDelayed && (
-                                        <span className='train-card-delayed-time'>
-                                            {addMinutes(
-                                                trainData.arrivalTime,
-                                                trainData.delay!
-                                            )}
-                                        </span>
-                                    )}
-                                    <span
-                                        className={
-                                            isDelayed
-                                                ? 'train-card-original-time'
-                                                : 'train-card-arrival-time'
-                                        }
-                                    >
-                                        {trainData.arrivalTime}
-                                    </span>
-                                </span>
-                            </div>
-                            <div className='train-card-info'>
-                                <span className='train-card-type'>
-                                    {parseTrainType(
-                                        trainData.trainType,
-                                        language
-                                    )}
-                                </span>
-                                <span className='train-card-number'>
-                                    {trainData.trainNo}
-                                </span>
-                                <span
-                                    className={`train-card-dot ${isDelayed ? 'delayed' : 'on-time'}`}
-                                />
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+                    })}
+                </div>
+            )}
         </div>
     );
 }

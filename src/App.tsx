@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import './App.css';
 
 import { TrainFront } from 'lucide-react';
 
 import { api } from './api/client';
-import { InitialLoadingScreen } from './components/InitialLoadingScreen';
-import { IOSInstallPrompt } from './components/IOSInstallPrompt';
-import { LanguageDropdown } from './components/LanguageDropdown';
-import { ShareCard } from './components/ShareCard';
-import { StationSelector } from './components/StationSelector';
-import { TrainList } from './components/TrainList';
+import {
+    IOSInstallPrompt,
+    LanguageDropdown,
+    ShareCard,
+    StationSelector,
+    StationSelectorSkeleton,
+    TrainList,
+} from './components';
 import { usePersistence } from './hooks/usePersistence';
 import { useI18n } from './i18n';
 import type { Station, TrainInfo } from './types';
@@ -34,18 +36,29 @@ function App() {
 
     const [stations, setStations] = useState<Station[]>([]);
     const [selectedTrain, setSelectedTrain] = useState<TrainInfo | null>(null);
-    const [stationsLoaded, setStationsLoaded] = useState(false);
+    const [stationsLoading, setStationsLoading] = useState(true);
 
     // Fetch stations at App level to provide names to ShareCard
     useEffect(() => {
         api.getStations()
             .then(setStations)
             .catch(console.error)
-            .finally(() => setStationsLoaded(true));
+            .finally(() => setStationsLoading(false));
     }, []);
 
-    const originStation = stations.find((s) => s.id === originId);
-    const destStation = stations.find((s) => s.id === destId);
+    const stationMap = useMemo(
+        () =>
+            new Map(
+                stations.map((station): [string, Station] => [
+                    station.id,
+                    station,
+                ])
+            ),
+        [stations]
+    );
+
+    const originStation = stationMap.get(originId);
+    const destStation = stationMap.get(destId);
 
     const isEn = language === 'en';
     const originName =
@@ -57,12 +70,8 @@ function App() {
             ? formatEnglishStationName(destStation?.nameEn)
             : destStation?.name) || destId;
 
-    // Show loading screen only until stations are loaded
-    const isInitialLoading = !stationsLoaded;
-
     return (
         <>
-            {isInitialLoading && <InitialLoadingScreen />}
             <IOSInstallPrompt />
             <header className='app-header'>
                 <div className='app-header-left'>
@@ -79,20 +88,24 @@ function App() {
                         <span className='label-dim'>
                             {t('app.selectRoute')}
                         </span>
-                        <StationSelector
-                            stations={stations}
-                            originId={originId}
-                            setOriginId={setOriginId}
-                            destId={destId}
-                            setDestId={setDestId}
-                            autoDetectOrigin={autoDetectOrigin}
-                            setAutoDetectOrigin={setAutoDetectOrigin}
-                            defaultDestId={defaultDestId}
-                            setDefaultDestId={setDefaultDestId}
-                        />
+                        {stationsLoading ? (
+                            <StationSelectorSkeleton />
+                        ) : (
+                            <StationSelector
+                                stations={stations}
+                                originId={originId}
+                                setOriginId={setOriginId}
+                                destId={destId}
+                                setDestId={setDestId}
+                                autoDetectOrigin={autoDetectOrigin}
+                                setAutoDetectOrigin={setAutoDetectOrigin}
+                                defaultDestId={defaultDestId}
+                                setDefaultDestId={setDefaultDestId}
+                            />
+                        )}
                     </div>
 
-                    {originId && destId && (
+                    {!stationsLoading && originId && destId && (
                         <TrainList
                             originId={originId}
                             destId={destId}
