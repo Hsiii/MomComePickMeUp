@@ -9,7 +9,6 @@ import {
 import { api } from '../api/client';
 import { useI18n } from '../i18n';
 import type { TrainInfo } from '../types';
-import { Badge } from './Badge';
 import { TrainListSkeleton } from './TrainListSkeleton';
 
 import './TrainList.css';
@@ -24,6 +23,31 @@ import './TrainList.css';
 function parseTrainType(trainType: string): string {
     // Remove content in parentheses and any suffix like "號"
     return trainType.split('(')[0].replace(/號$/, '');
+}
+
+/** Add minutes to a HH:mm time string */
+function addMinutes(time: string, minutes: number): string {
+    const [h, m] = time.split(':').map(Number);
+    const total = h * 60 + m + minutes;
+    const newH = Math.floor(total / 60) % 24;
+    const newM = total % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+}
+
+/** Calculate trip duration in minutes between two HH:mm strings */
+function getTripMinutes(departure: string, arrival: string): number {
+    const [dh, dm] = departure.split(':').map(Number);
+    const [ah, am] = arrival.split(':').map(Number);
+    let diff = ah * 60 + am - (dh * 60 + dm);
+    if (diff < 0) diff += 24 * 60; // crosses midnight
+    return diff;
+}
+
+function formatDuration(minutes: number): string {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h === 0) return `${m}m`;
+    return m === 0 ? `${h}h` : `${h}h${m}m`;
 }
 
 interface TrainListProps {
@@ -199,9 +223,6 @@ export function TrainList({
                                     </div>
                                     <div className='skeleton skeleton-details'></div>
                                 </div>
-                                <div className='train-card-right'>
-                                    <span className='skeleton skeleton-badge'></span>
-                                </div>
                             </div>
                         );
                     }
@@ -209,6 +230,11 @@ export function TrainList({
                     // Render actual train data
                     const trainData = train as TrainInfo;
                     const isSelected = trainData.trainNo === selectedTrainNo;
+                    const isDelayed = (trainData.delay ?? 0) > 0;
+                    const tripMin = getTripMinutes(
+                        trainData.departureTime,
+                        trainData.arrivalTime
+                    );
 
                     return (
                         <div
@@ -216,35 +242,67 @@ export function TrainList({
                             className={`card-panel clickable-item train-card ${isSelected ? 'selected' : ''}`}
                             onClick={() => onSelect(trainData)}
                         >
-                            <div className='train-card-left'>
-                                <div className='train-card-time-row'>
-                                    <span className='train-card-departure-time'>
+                            <div className='train-card-times'>
+                                <span
+                                    className={`train-card-time-cell ${isDelayed ? 'delayed' : ''}`}
+                                >
+                                    {isDelayed && (
+                                        <span className='train-card-delayed-time'>
+                                            {addMinutes(
+                                                trainData.departureTime,
+                                                trainData.delay!
+                                            )}
+                                        </span>
+                                    )}
+                                    <span
+                                        className={
+                                            isDelayed
+                                                ? 'train-card-original-time'
+                                                : 'train-card-departure-time'
+                                        }
+                                    >
                                         {trainData.departureTime}
                                     </span>
-                                    <span className='train-card-arrow'>➔</span>
-                                    <span className='train-card-arrival-time'>
+                                </span>
+                                <div className='train-card-separator'>
+                                    <span className='train-card-line' />
+                                    <span className='train-card-trip-time'>
+                                        {formatDuration(tripMin)}
+                                    </span>
+                                    <span className='train-card-line' />
+                                </div>
+                                <span
+                                    className={`train-card-time-cell ${isDelayed ? 'delayed' : ''}`}
+                                >
+                                    {isDelayed && (
+                                        <span className='train-card-delayed-time'>
+                                            {addMinutes(
+                                                trainData.arrivalTime,
+                                                trainData.delay!
+                                            )}
+                                        </span>
+                                    )}
+                                    <span
+                                        className={
+                                            isDelayed
+                                                ? 'train-card-original-time'
+                                                : 'train-card-arrival-time'
+                                        }
+                                    >
                                         {trainData.arrivalTime}
                                     </span>
-                                </div>
-                                <div className='train-card-details'>
-                                    {parseTrainType(trainData.trainType)}{' '}
-                                    {trainData.trainNo}
-                                </div>
+                                </span>
                             </div>
-                            <div className='train-card-right'>
-                                <Badge
-                                    variant={
-                                        trainData.status === 'delayed'
-                                            ? 'danger'
-                                            : 'success'
-                                    }
-                                >
-                                    {trainData.delay && trainData.delay > 0
-                                        ? t('train.delayMinutes', {
-                                              minutes: trainData.delay,
-                                          })
-                                        : t('train.onTime')}
-                                </Badge>
+                            <div className='train-card-info'>
+                                <span
+                                    className={`train-card-dot ${isDelayed ? 'delayed' : 'on-time'}`}
+                                />
+                                <span className='train-card-type'>
+                                    {parseTrainType(trainData.trainType)}
+                                </span>
+                                <span className='train-card-number'>
+                                    {trainData.trainNo}
+                                </span>
                             </div>
                         </div>
                     );
