@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
 import type { Station } from '../types';
+import {
+    filterStationsBySearch,
+    normalizeSearchValue,
+    resolvePreferredStationId,
+} from './stationSearchUtils';
 
 interface StationDropdownProps {
     stations: Station[];
@@ -44,18 +49,10 @@ export function StationDropdown({
             document.removeEventListener('mousedown', handleClickOutside);
     }, [setIsOpen]);
 
-    // Normalize search value to match API's character usage (台 → 臺)
-    const normalizeSearchValue = (value: string) => value.replace(/台/g, '臺');
-
     // Check for exact match and auto-select
     const checkAndAutoSelect = (value: string) => {
         const normalizedSearch = normalizeSearchValue(value);
-        const matchingStations = stations.filter(
-            (s) =>
-                s.name.includes(value) ||
-                s.name.includes(normalizedSearch) ||
-                s.nameEn.toLowerCase().includes(value.toLowerCase())
-        );
+        const matchingStations = filterStationsBySearch(stations, value);
 
         if (matchingStations.length === 1) {
             const station = matchingStations[0];
@@ -64,7 +61,9 @@ export function StationDropdown({
                 station.name === normalizedSearch ||
                 station.nameEn.toLowerCase() === value.toLowerCase()
             ) {
-                handleSelect(station.id);
+                handleSelect(
+                    resolvePreferredStationId(station.id, stations, value)
+                );
                 return true;
             }
         }
@@ -72,14 +71,7 @@ export function StationDropdown({
     };
 
     const filteredStations = searchValue
-        ? stations.filter((s) => {
-              const normalizedSearch = normalizeSearchValue(searchValue);
-              return (
-                  s.name.includes(searchValue) ||
-                  s.name.includes(normalizedSearch) ||
-                  s.nameEn.toLowerCase().includes(searchValue.toLowerCase())
-              );
-          })
+        ? filterStationsBySearch(stations, searchValue)
         : [];
 
     const handleSelect = (id: string) => {

@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { useI18n } from '../i18n';
 import type { Station } from '../types';
 import { StationDropdown } from './StationDropdown';
+import { resolvePreferredStationId } from './stationSearchUtils';
 
 import './StationSelector.css';
 
@@ -107,10 +108,15 @@ export function StationSelector({
                     });
 
                     if (nearestStation) {
-                        setOriginId(nearestStation.id);
+                        const preferredStationId = resolvePreferredStationId(
+                            nearestStation.id,
+                            stations
+                        );
+
+                        setOriginId(preferredStationId);
                         localStorage.setItem(
                             CACHED_ORIGIN_KEY,
-                            nearestStation.id
+                            preferredStationId
                         );
                     }
                     hasAutoSelected.current = true;
