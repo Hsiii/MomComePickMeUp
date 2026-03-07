@@ -254,7 +254,6 @@ interface TrainListProps {
 - Editable message input (auto-generated from template)
 - Calculates adjusted arrival time (includes delay)
 - Share via Web Share API (mobile)
-- Direct LINE share button
 - Copy to clipboard fallback (desktop)
 
 **Message Format:**

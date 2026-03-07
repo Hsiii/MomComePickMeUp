@@ -42,11 +42,6 @@ export function ShareCard({ train, destName }: ShareCardProps) {
         setMessage(defaultMessage);
     }, [defaultMessage]);
 
-    const handleShareLine = () => {
-        const encodedMessage = encodeURIComponent(message);
-        window.location.href = `https://line.me/R/msg/text/?${encodedMessage}`;
-    };
-
     const handleShare = async () => {
         if (navigator.share) {
             try {
@@ -80,12 +75,6 @@ export function ShareCard({ train, destName }: ShareCardProps) {
                 className='share-card-button share-button'
             >
                 <Share2 />
-            </IconButton>
-            <IconButton
-                onClick={handleShareLine}
-                className='share-card-button line-button'
-            >
-                <img src='/line-icon.svg' alt={t('share.lineIconAlt')} />
             </IconButton>
         </div>
     );

@@ -30,7 +30,6 @@ export const translations = {
 
         'share.arrivalMessage': '{time}到{station}',
         'share.noTrainMessage': '好像沒車搭了',
-        'share.lineIconAlt': 'Line',
 
         'iosInstall.title': '加到主畫面',
         'iosInstall.subtitle': '將 {appName} 加入主畫面以享受最佳使用體驗',
@@ -63,7 +62,6 @@ export const translations = {
 
         'share.arrivalMessage': 'Arrive at {station} by {time}',
         'share.noTrainMessage': 'No more trains available',
-        'share.lineIconAlt': 'Line',
 
         'iosInstall.title': 'Add to Home Screen',
         'iosInstall.subtitle':

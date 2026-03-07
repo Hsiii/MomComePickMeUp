@@ -25,14 +25,6 @@
     flex-shrink: 0;
 }
 
-.share-card-button.line-button {
-    background: var(--color-line);
-}
-
-.share-card-button.line-button:hover {
-    filter: brightness(0.85);
-}
-
 .share-card-button.share-button {
     > * {
         translate: -1px;
