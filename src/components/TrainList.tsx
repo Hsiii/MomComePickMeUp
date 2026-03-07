@@ -50,6 +50,15 @@ function addMinutes(time: string, minutes: number): string {
     return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 }
 
+function timeToMinutes(time: string): number {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+}
+
+function getEffectiveDepartureMinutes(train: TrainInfo): number {
+    return timeToMinutes(train.departureTime) + (train.delay ?? 0);
+}
+
 /** Calculate trip duration in minutes between two HH:mm strings */
 function getTripMinutes(departure: string, arrival: string): number {
     const [dh, dm] = departure.split(':').map(Number);
@@ -118,25 +127,33 @@ export function TrainList({
                     minute: '2-digit',
                     timeZone: 'Asia/Taipei',
                 });
+                const currentTimeMinutes = timeToMinutes(currentTimeStr);
 
-                const nextTrainIndex = res.trains.findIndex(
-                    (t) => t.departureTime >= currentTimeStr
+                const nextScheduledTrainIndex = res.trains.findIndex(
+                    (t) => timeToMinutes(t.departureTime) >= currentTimeMinutes
+                );
+                const nextCatchableTrainIndex = res.trains.findIndex(
+                    (t) => getEffectiveDepartureMinutes(t) >= currentTimeMinutes
                 );
 
                 let displayTrains: TrainInfo[] = [];
                 let recommendedTrain: TrainInfo | null = null;
 
-                if (nextTrainIndex === -1) {
+                if (nextCatchableTrainIndex === -1) {
                     displayTrains = res.trains.slice(-3);
                     recommendedTrain = displayTrains[displayTrains.length - 1];
                 } else {
-                    const start = Math.max(0, nextTrainIndex - 1);
-                    const end = start + 3;
+                    const start = Math.max(0, nextCatchableTrainIndex - 1);
+                    const minimumEnd = start + 3;
+                    const scheduledContextEnd =
+                        nextScheduledTrainIndex === -1
+                            ? minimumEnd
+                            : nextScheduledTrainIndex + 2;
+                    const end = Math.max(minimumEnd, scheduledContextEnd);
+
                     displayTrains = res.trains.slice(start, end);
                     recommendedTrain =
-                        displayTrains.find(
-                            (t) => t.departureTime >= currentTimeStr
-                        ) || displayTrains[0];
+                        res.trains[nextCatchableTrainIndex] || null;
                 }
 
                 setTrains(displayTrains);
