@@ -28,14 +28,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 2px solid transparent;
     background: var(--color-bg-light);
     transition: all 0.2s ease;
     animation: none;
 }
 
 .train-card.selected {
-    border: 2px solid var(--color-primary);
+    outline: 2px solid var(--color-primary);
     background: var(--color-primary-subtle);
 }
 
