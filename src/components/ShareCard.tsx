@@ -19,22 +19,19 @@ type OverlayPart = {
     needsLeadingGap?: boolean;
 };
 
-const LATIN_OR_NUMERIC_CHAR_REGEX = /[\p{Script=Latin}\p{Number}]/u;
+const LATIN_CHAR_REGEX = /\p{Script=Latin}/u;
 const CJK_CHAR_REGEX =
     /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
 
 function needsAutospaceBetween(leftChar: string, rightChar: string) {
     if (!leftChar || !rightChar) return false;
 
-    const leftIsLatinOrNumeric = LATIN_OR_NUMERIC_CHAR_REGEX.test(leftChar);
-    const rightIsLatinOrNumeric = LATIN_OR_NUMERIC_CHAR_REGEX.test(rightChar);
+    const leftIsLatin = LATIN_CHAR_REGEX.test(leftChar);
+    const rightIsLatin = LATIN_CHAR_REGEX.test(rightChar);
     const leftIsCjk = CJK_CHAR_REGEX.test(leftChar);
     const rightIsCjk = CJK_CHAR_REGEX.test(rightChar);
 
-    return (
-        (leftIsLatinOrNumeric && rightIsCjk) ||
-        (leftIsCjk && rightIsLatinOrNumeric)
-    );
+    return (leftIsLatin && rightIsCjk) || (leftIsCjk && rightIsLatin);
 }
 
 function shouldApplyOverlayAutospace() {
