@@ -14,12 +14,6 @@
     font-size: var(--text-lg);
 }
 
-.app-header-icon {
-    width: 1.5cap;
-    height: 1.5cap;
-    flex: 0 0 1.5cap;
-}
-
 .app-header-title {
     margin: 0;
     font-family: var(--font-sans);

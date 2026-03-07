@@ -194,11 +194,14 @@ export function StationDropdown({
                 className={`station-trigger ${selectedStation ? 'has-value' : ''}`}
                 onClick={handleOpen}
             >
-                <span className='station-trigger-label'>{placeholder}</span>
-                <span className='station-trigger-value'>
-                    {selectedStation
-                        ? getDisplayStationName(selectedStation)
-                        : ''}
+                <Search className='station-trigger-leading-icon' />
+                <span className='station-trigger-copy'>
+                    <span className='station-trigger-label'>{placeholder}</span>
+                    <span className='station-trigger-value'>
+                        {selectedStation
+                            ? getDisplayStationName(selectedStation)
+                            : ''}
+                    </span>
                 </span>
             </button>
 
@@ -227,14 +230,6 @@ export function StationDropdown({
                                 <h2 className='station-search-title'>
                                     {title}
                                 </h2>
-                                <button
-                                    type='button'
-                                    className='station-search-close'
-                                    onClick={handleDismiss}
-                                    aria-label={t('common.close')}
-                                >
-                                    <X />
-                                </button>
                             </div>
 
                             <div className='station-search-panel'>
