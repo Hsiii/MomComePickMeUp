@@ -233,12 +233,6 @@ export function TrainList({
             {error ? (
                 <div className='card-panel train-list-error'>
                     <div className='train-list-error-message'>{error}</div>
-                    <button
-                        onClick={fetchSchedule}
-                        className='btn-primary train-list-error-button'
-                    >
-                        {t('common.retry')}
-                    </button>
                 </div>
             ) : loading ? (
                 <TrainListSkeleton showLabel={false} />

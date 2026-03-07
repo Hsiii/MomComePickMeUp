@@ -24,17 +24,19 @@
 }
 
 .train-list-error {
-    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-5);
     text-align: center;
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.08);
 }
 
 .train-list-error-message {
     color: var(--color-danger);
-    margin-bottom: var(--space-4);
-}
-
-.train-list-error-button {
-    width: auto;
+    font-size: var(--text-base);
+    line-height: 1.5;
 }
 
 .train-list-empty {

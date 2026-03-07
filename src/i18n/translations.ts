@@ -35,6 +35,7 @@ export const translations = {
         'train.noTrainsAvailable': '查無可搭乘班次',
 
         'error.failedToLoadSchedule': '無法取得時刻表',
+        'error.failedToLoadStations': '無法載入車站資料',
         'common.close': '關閉',
         'common.clear': '清除',
         'common.retry': '重試',
@@ -77,6 +78,7 @@ export const translations = {
         'train.noTrainsAvailable': 'No trains available',
 
         'error.failedToLoadSchedule': 'Failed to load schedule',
+        'error.failedToLoadStations': 'Failed to load stations',
         'common.close': 'Close',
         'common.clear': 'Clear',
         'common.retry': 'Retry',

@@ -56,6 +56,7 @@ function App() {
     const [stations, setStations] = useState<Station[]>([]);
     const [selectedTrain, setSelectedTrain] = useState<TrainInfo | null>(null);
     const [stationsLoading, setStationsLoading] = useState(true);
+    const [stationsError, setStationsError] = useState<string | null>(null);
 
     const stationDebugFlags = useMemo(() => getStationDebugFlags(), []);
 
@@ -78,9 +79,10 @@ function App() {
             .catch((error) => {
                 console.error(error);
                 setStations([]);
+                setStationsError(t('error.failedToLoadStations'));
             })
             .finally(() => setStationsLoading(false));
-    }, [stationDebugFlags.showFetchError, stationDebugFlags.showSkeleton]);
+    }, [stationDebugFlags.showFetchError, stationDebugFlags.showSkeleton, t]);
 
     // Fetch stations at App level to provide names to ShareCard
     useEffect(() => {
@@ -131,6 +133,12 @@ function App() {
                         </span>
                         {stationsLoading ? (
                             <StationSelectorSkeleton />
+                        ) : stationsError ? (
+                            <div className='card-panel app-load-error'>
+                                <div className='app-load-error-message'>
+                                    {stationsError}
+                                </div>
+                            </div>
                         ) : (
                             <StationSelector
                                 stations={stations}
