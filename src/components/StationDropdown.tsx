@@ -29,6 +29,15 @@ interface StationDropdownProps {
 const RECENT_STATIONS_KEY = 'ontrack_recent_stations';
 const MAX_RECENT_STATIONS = 6;
 
+function shouldAutoFocusSearchInput() {
+    if (typeof window === 'undefined') return false;
+
+    return (
+        navigator.maxTouchPoints > 0 ||
+        window.matchMedia('(hover: none), (pointer: coarse)').matches
+    );
+}
+
 function getRecentStationIds(): string[] {
     try {
         const storedValue = localStorage.getItem(RECENT_STATIONS_KEY);
@@ -95,7 +104,15 @@ export function StationDropdown({
         document.body.style.overflow = 'hidden';
 
         const frameId = window.requestAnimationFrame(() => {
-            inputRef.current?.focus();
+            const input = inputRef.current;
+            if (!input) return;
+
+            input.focus();
+
+            if (!shouldAutoFocusSearchInput()) return;
+
+            const cursorPosition = input.value.length;
+            input.setSelectionRange(cursorPosition, cursorPosition);
         });
 
         return () => {
