@@ -98,40 +98,11 @@
 }
 
 .station-search-app-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-5);
-    color: var(--color-primary);
+    flex-shrink: 0;
 }
 
 .station-search-app-header-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    flex: 1;
     min-width: 0;
-    font-size: var(--text-lg);
-}
-
-.station-search-app-header-icon {
-    color: var(--color-primary);
-}
-
-.station-search-app-header-title {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: var(--text-lg);
-    font-weight: var(--font-bold);
-    letter-spacing: 0.02em;
-    line-height: 1.2;
-    min-height: 1.5rem;
-}
-
-.station-search-app-header-spacer {
-    width: 44px;
-    height: 44px;
-    flex: 0 0 44px;
 }
 
 .station-search-content {
@@ -146,9 +117,6 @@
 
 .station-search-title {
     margin: 0;
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    color: var(--color-text-dim);
 }
 
 .station-search-close,

@@ -246,14 +246,14 @@ export function StationDropdown({
             {isOpen && (
                 <div className='station-search-overlay'>
                     <div className='station-search-page'>
-                        <header className='station-search-app-header'>
-                            <div className='station-search-app-header-left'>
+                        <header className='app-header station-search-app-header'>
+                            <div className='app-header-left station-search-app-header-left'>
                                 <TrainFront
-                                    className='station-search-app-header-icon'
+                                    className='app-header-icon station-search-app-header-icon'
                                     strokeWidth={2}
                                     aria-hidden='true'
                                 />
-                                <h1 className='station-search-app-header-title'>
+                                <h1 className='app-header-title station-search-app-header-title'>
                                     {t('app.title')}
                                 </h1>
                             </div>
@@ -270,7 +270,7 @@ export function StationDropdown({
 
                         <div className='station-search-content'>
                             <div className='station-search-header'>
-                                <h2 className='station-search-title'>
+                                <h2 className='label-dim station-search-title'>
                                     {title}
                                 </h2>
                             </div>

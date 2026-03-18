@@ -163,6 +163,7 @@ select {
 
 .label-dim {
     display: block;
+    margin-top: 0;
     margin-bottom: var(--space-2);
     color: var(--color-text-dim);
     font-size: var(--text-sm);
