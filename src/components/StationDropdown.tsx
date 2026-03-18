@@ -80,6 +80,7 @@ export function StationDropdown({
 }: StationDropdownProps) {
     const { t, language } = useI18n();
     const inputRef = useRef<HTMLInputElement>(null);
+    const shouldAutoFocusOnMobile = shouldAutoFocusSearchInput();
     const [recentStationIds, setRecentStationIds] = useState<string[]>(() =>
         getRecentStationIds()
     );
@@ -123,11 +124,7 @@ export function StationDropdown({
 
         const frameId = window.requestAnimationFrame(() => {
             const input = inputRef.current;
-            if (!input) return;
-
-            input.focus();
-
-            if (!shouldAutoFocusSearchInput()) return;
+            if (!input || !shouldAutoFocusOnMobile) return;
 
             const cursorPosition = input.value.length;
             input.setSelectionRange(cursorPosition, cursorPosition);
@@ -137,7 +134,7 @@ export function StationDropdown({
             window.cancelAnimationFrame(frameId);
             document.body.style.overflow = previousOverflow;
         };
-    }, [isOpen]);
+    }, [isOpen, shouldAutoFocusOnMobile]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -292,6 +289,7 @@ export function StationDropdown({
                                             ref={inputRef}
                                             type='text'
                                             className='station-search-input'
+                                            autoFocus
                                             value={searchValue}
                                             placeholder={placeholder}
                                             onChange={(event) =>
