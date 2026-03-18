@@ -252,19 +252,21 @@ export function StationSelector({
                         onCacheSelection={(id) =>
                             localStorage.setItem(CACHED_ORIGIN_KEY, id)
                         }
-                    />
-                    <button
-                        type='button'
-                        className={`station-action-btn ${autoDetectOrigin ? 'active' : ''}`}
-                        onClick={handleToggleGeo}
-                        aria-label={
-                            autoDetectOrigin
-                                ? t('app.disableAutoDetectOrigin')
-                                : t('app.enableAutoDetectOrigin')
+                        triggerAction={
+                            <button
+                                type='button'
+                                className={`station-action-btn ${autoDetectOrigin ? 'active' : ''}`}
+                                onClick={handleToggleGeo}
+                                aria-label={
+                                    autoDetectOrigin
+                                        ? t('app.disableAutoDetectOrigin')
+                                        : t('app.enableAutoDetectOrigin')
+                                }
+                            >
+                                {autoDetectOrigin ? <MapPin /> : <MapPinOff />}
+                            </button>
                         }
-                    >
-                        {autoDetectOrigin ? <MapPin /> : <MapPinOff />}
-                    </button>
+                    />
                 </div>
             </div>
 
@@ -282,23 +284,29 @@ export function StationSelector({
                         placeholder={t('station.destination')}
                         title={t('station.selectDestination')}
                         selectedStation={destStation}
+                        triggerAction={
+                            destId ? (
+                                <button
+                                    type='button'
+                                    className={`station-action-btn station-action-btn-default ${isDefaultDest ? 'active' : ''}`}
+                                    onClick={handleToggleDefaultDest}
+                                    aria-label={
+                                        isDefaultDest
+                                            ? t('toast.defaultDestCleared')
+                                            : t('toast.defaultDestSet')
+                                    }
+                                >
+                                    <Star
+                                        fill={
+                                            isDefaultDest
+                                                ? 'currentColor'
+                                                : 'none'
+                                        }
+                                    />
+                                </button>
+                            ) : null
+                        }
                     />
-                    {destId && (
-                        <button
-                            type='button'
-                            className={`station-action-btn station-action-btn-default ${isDefaultDest ? 'active' : ''}`}
-                            onClick={handleToggleDefaultDest}
-                            aria-label={
-                                isDefaultDest
-                                    ? t('toast.defaultDestCleared')
-                                    : t('toast.defaultDestSet')
-                            }
-                        >
-                            <Star
-                                fill={isDefaultDest ? 'currentColor' : 'none'}
-                            />
-                        </button>
-                    )}
                 </div>
             </div>
         </div>

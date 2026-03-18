@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ReactNode,
+} from 'react';
 import { Clock3, Search, TrainFront, X } from 'lucide-react';
 
 import { useI18n } from '../i18n';
@@ -24,6 +31,7 @@ interface StationDropdownProps {
     title: string;
     selectedStation?: Station;
     onCacheSelection?: (id: string) => void;
+    triggerAction?: ReactNode;
 }
 
 const RECENT_STATIONS_KEY = 'ontrack_recent_stations';
@@ -77,6 +85,7 @@ export function StationDropdown({
     title,
     selectedStation,
     onCacheSelection,
+    triggerAction,
 }: StationDropdownProps) {
     const { t, language } = useI18n();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -229,7 +238,7 @@ export function StationDropdown({
         <div className='station-input-wrapper'>
             <button
                 type='button'
-                className={`station-trigger ${selectedStation ? 'has-value' : ''}`}
+                className={`station-trigger ${selectedStation ? 'has-value' : ''} ${triggerAction ? 'has-action' : ''}`}
                 onClick={handleOpen}
             >
                 <Search className='station-trigger-leading-icon' />
@@ -242,6 +251,12 @@ export function StationDropdown({
                     </span>
                 </span>
             </button>
+
+            {triggerAction ? (
+                <div className='station-trigger-action-slot'>
+                    {triggerAction}
+                </div>
+            ) : null}
 
             {isOpen && (
                 <div className='station-search-overlay'>
